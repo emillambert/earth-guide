@@ -6,9 +6,15 @@ import { useParams, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { GuideEntryView } from "@/components/GuideEntryView";
+import { ProgressiveGuideEntry } from "@/components/ProgressiveGuideEntry";
 import { PlasticButton } from "@/components/PlasticButton";
 import { LoadingDisplay } from "@/components/LoadingDisplay";
-import { fetchEntry, fetchFollowUp } from "@/lib/apiClient";
+import { fetchFollowUp } from "@/lib/apiClient";
+import {
+  beginEntryGeneration,
+  retryEntryGeneration,
+  usePendingEntry,
+} from "@/lib/pendingEntries";
 import { cacheEntry } from "@/lib/storage";
 import { useEntry } from "@/lib/useAppState";
 import { useIsClient } from "@/lib/useIsClient";
@@ -18,33 +24,19 @@ function EntryContent({ id }: { id: string }) {
   const router = useRouter();
   const isClient = useIsClient();
   const stored = useEntry(id);
+  const pending = usePendingEntry(id);
   const [override, setOverride] = useState<GuideEntry | null>(null);
-  const [activity, setActivity] = useState<"related" | "follow-up" | null>(
-    null,
-  );
-  const [relatedError, setRelatedError] = useState<string | null>(null);
+  const [followUpBusy, setFollowUpBusy] = useState(false);
   const entry = override && override.id === id ? override : stored ?? null;
 
-  async function consultRelated(topic: string) {
-    setRelatedError(null);
-    setActivity("related");
-    try {
-      const next = await fetchEntry(topic);
-      cacheEntry(next);
-      router.push(`/entry/${next.id}`);
-    } catch (error) {
-      setRelatedError(
-        error instanceof Error
-          ? error.message
-          : "The related entry could not be consulted.",
-      );
-      setActivity(null);
-    }
+  function consultRelated(topic: string) {
+    const nextId = beginEntryGeneration({ query: topic });
+    router.push(`/entry/${nextId}`);
   }
 
   async function handleFollowUp(question: string) {
     if (!entry) return;
-    setActivity("follow-up");
+    setFollowUpBusy(true);
     try {
       const supplement = await fetchFollowUp(entry, question);
       const updated: GuideEntry = {
@@ -60,12 +52,49 @@ function EntryContent({ id }: { id: string }) {
       cacheEntry(updated);
       setOverride(updated);
     } finally {
-      setActivity(null);
+      setFollowUpBusy(false);
     }
   }
 
   if (!isClient) {
     return <LoadingDisplay label="Recalling entry" />;
+  }
+
+  if (!entry && pending?.status === "generating") {
+    return <ProgressiveGuideEntry pending={pending} />;
+  }
+
+  if (!entry && pending?.status === "error") {
+    return (
+      <div className="terminal-enter space-y-5 py-8">
+        <div className="space-y-2">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
+            Transmission interrupted
+          </p>
+          <h1 className="text-xl font-semibold uppercase tracking-[0.04em]">
+            {pending.progress.title ?? pending.query}
+          </h1>
+          <p className="border border-[color:var(--warning)]/50 px-3 py-3 text-sm text-[color:var(--warning)]">
+            {pending.error}
+          </p>
+        </div>
+        <div className="grid gap-2">
+          <PlasticButton
+            fullWidth
+            onClick={() => retryEntryGeneration(id)}
+          >
+            Retry transmission
+          </PlasticButton>
+          <PlasticButton
+            fullWidth
+            variant="secondary"
+            onClick={() => router.push("/guide")}
+          >
+            Return to index
+          </PlasticButton>
+        </div>
+      </div>
+    );
   }
 
   if (!entry) {
@@ -81,24 +110,13 @@ function EntryContent({ id }: { id: string }) {
     );
   }
 
-  if (activity === "related") {
-    return <LoadingDisplay label="Consulting related entry" />;
-  }
-
   return (
-    <>
-      {relatedError ? (
-        <p className="mb-4 border border-[color:var(--warning)]/50 px-3 py-2 text-sm text-[color:var(--warning)]">
-          {relatedError}
-        </p>
-      ) : null}
-      <GuideEntryView
-        entry={entry}
-        busy={activity === "follow-up"}
-        onRelated={(topic) => void consultRelated(topic)}
-        onFollowUp={handleFollowUp}
-      />
-    </>
+    <GuideEntryView
+      entry={entry}
+      busy={followUpBusy}
+      onRelated={consultRelated}
+      onFollowUp={handleFollowUp}
+    />
   );
 }
 

@@ -155,6 +155,53 @@ async function writeGuideEntry(userQuestion: string): Promise<GuideRewrite> {
   return guideRewriteSchema.parse(JSON.parse(text));
 }
 
+async function writeGuideEntryStreaming(
+  userQuestion: string,
+  onDelta: (delta: string) => void,
+  signal?: AbortSignal,
+): Promise<GuideRewrite> {
+  const stream = await getClient().responses.create(
+    {
+      model: MODEL,
+      input: [
+        { role: "system", content: GUIDE_REWRITE_SYSTEM },
+        { role: "user", content: GUIDE_DIRECT_USER(userQuestion) },
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "guide_entry",
+          strict: true,
+          schema: guideRewriteJsonSchema,
+        },
+      },
+      stream: true,
+    },
+    { signal },
+  );
+
+  let text = "";
+  for await (const event of stream) {
+    if (event.type === "response.output_text.delta") {
+      text += event.delta;
+      onDelta(event.delta);
+    } else if (event.type === "response.output_text.done") {
+      text = event.text;
+    } else if (event.type === "response.failed") {
+      throw new Error("The Guide could not complete this entry.");
+    } else if (event.type === "response.incomplete") {
+      throw new Error("The Guide stopped before completing this entry.");
+    } else if (event.type === "error") {
+      throw new Error(event.message || "The Guide stream failed.");
+    }
+  }
+
+  if (!text.trim()) {
+    throw new Error("The Guide returned an empty response.");
+  }
+  return guideRewriteSchema.parse(JSON.parse(text));
+}
+
 function toGuideEntry(
   rewrite: GuideRewrite,
   draft: FactualDraft | null,
@@ -205,6 +252,20 @@ export async function generateEntry(query: string): Promise<GuideEntry> {
   return generateDirectFromQuestion(query, {
     query,
     kind: "lookup",
+  });
+}
+
+export async function generateEntryStreaming(
+  query: string,
+  onDelta: (delta: string) => void,
+  extras: Partial<GuideEntry> = {},
+  signal?: AbortSignal,
+): Promise<GuideEntry> {
+  const rewrite = await writeGuideEntryStreaming(query, onDelta, signal);
+  return toGuideEntry(rewrite, null, {
+    query,
+    kind: "lookup",
+    ...extras,
   });
 }
 

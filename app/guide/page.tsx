@@ -9,13 +9,10 @@ import { SearchPanel } from "@/components/SearchPanel";
 import { PlasticButton } from "@/components/PlasticButton";
 import { LoadingDisplay } from "@/components/LoadingDisplay";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import {
-  fetchEntry,
-  fetchLocalEntry,
-  fetchSurpriseEntry,
-} from "@/lib/apiClient";
+import { fetchLocalEntry } from "@/lib/apiClient";
 import { requestCoordinates, reverseGeocode } from "@/lib/location";
 import { cacheEntry, setSoundEnabled } from "@/lib/storage";
+import { beginEntryGeneration } from "@/lib/pendingEntries";
 import { useAppState } from "@/lib/useAppState";
 import type { GuideEntry } from "@/types/guide";
 import { EDITORIAL_STATUS_LINES } from "@/lib/prompts";
@@ -39,33 +36,19 @@ export default function IndexPage() {
     return () => window.clearInterval(id);
   }, []);
 
-  async function openEntry(entry: GuideEntry) {
+  function openEntry(entry: GuideEntry) {
     cacheEntry(entry);
     router.push(`/entry/${entry.id}`);
   }
 
-  async function consult(query: string) {
-    setLoading(true);
-    setError(null);
-    try {
-      const entry = await fetchEntry(query);
-      await openEntry(entry);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Lookup failed.");
-      setLoading(false);
-    }
+  function consult(query: string) {
+    const id = beginEntryGeneration({ query });
+    router.push(`/entry/${id}`);
   }
 
-  async function surprise() {
-    setLoading(true);
-    setError(null);
-    try {
-      const entry = await fetchSurpriseEntry();
-      await openEntry(entry);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Surprise failed.");
-      setLoading(false);
-    }
+  function surprise() {
+    const id = beginEntryGeneration({ surprise: true });
+    router.push(`/entry/${id}`);
   }
 
   async function localEntry() {
@@ -78,7 +61,7 @@ export default function IndexPage() {
         ...coords,
         placeName,
       });
-      await openEntry(entry);
+      openEntry(entry);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Local entry failed.");
       setLoading(false);
@@ -120,7 +103,7 @@ export default function IndexPage() {
               <PlasticButton
                 fullWidth
                 variant="secondary"
-                onClick={() => void surprise()}
+                onClick={surprise}
               >
                 Surprise me
               </PlasticButton>
