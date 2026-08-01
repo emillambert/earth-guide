@@ -19,23 +19,32 @@ function EntryContent({ id }: { id: string }) {
   const isClient = useIsClient();
   const stored = useEntry(id);
   const [override, setOverride] = useState<GuideEntry | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [activity, setActivity] = useState<"related" | "follow-up" | null>(
+    null,
+  );
+  const [relatedError, setRelatedError] = useState<string | null>(null);
   const entry = override && override.id === id ? override : stored ?? null;
 
   async function consultRelated(topic: string) {
-    setBusy(true);
+    setRelatedError(null);
+    setActivity("related");
     try {
       const next = await fetchEntry(topic);
       cacheEntry(next);
       router.push(`/entry/${next.id}`);
-    } catch {
-      setBusy(false);
+    } catch (error) {
+      setRelatedError(
+        error instanceof Error
+          ? error.message
+          : "The related entry could not be consulted.",
+      );
+      setActivity(null);
     }
   }
 
   async function handleFollowUp(question: string) {
     if (!entry) return;
-    setBusy(true);
+    setActivity("follow-up");
     try {
       const supplement = await fetchFollowUp(entry, question);
       const updated: GuideEntry = {
@@ -51,7 +60,7 @@ function EntryContent({ id }: { id: string }) {
       cacheEntry(updated);
       setOverride(updated);
     } finally {
-      setBusy(false);
+      setActivity(null);
     }
   }
 
@@ -72,13 +81,24 @@ function EntryContent({ id }: { id: string }) {
     );
   }
 
+  if (activity === "related") {
+    return <LoadingDisplay label="Consulting related entry" />;
+  }
+
   return (
-    <GuideEntryView
-      entry={entry}
-      busy={busy}
-      onRelated={(topic) => void consultRelated(topic)}
-      onFollowUp={handleFollowUp}
-    />
+    <>
+      {relatedError ? (
+        <p className="mb-4 border border-[color:var(--warning)]/50 px-3 py-2 text-sm text-[color:var(--warning)]">
+          {relatedError}
+        </p>
+      ) : null}
+      <GuideEntryView
+        entry={entry}
+        busy={activity === "follow-up"}
+        onRelated={(topic) => void consultRelated(topic)}
+        onFollowUp={handleFollowUp}
+      />
+    </>
   );
 }
 

@@ -25,6 +25,7 @@ export default function IdentifyPage() {
   const uploadRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
+  const [readingFile, setReadingFile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +35,16 @@ export default function IdentifyPage() {
       setError("Please choose an image file.");
       return;
     }
-    const dataUrl = await fileToDataUrl(file);
-    setPreview(dataUrl);
+    setReadingFile(true);
     setError(null);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setPreview(dataUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not read image.");
+    } finally {
+      setReadingFile(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -92,7 +100,12 @@ export default function IdentifyPage() {
               <PlasticButton
                 fullWidth
                 type="button"
-                onClick={() => cameraRef.current?.click()}
+                disabled={readingFile}
+                onClick={() => {
+                  if (!cameraRef.current) return;
+                  cameraRef.current.value = "";
+                  cameraRef.current.click();
+                }}
               >
                 Take a photo
               </PlasticButton>
@@ -100,7 +113,12 @@ export default function IdentifyPage() {
                 fullWidth
                 type="button"
                 variant="secondary"
-                onClick={() => uploadRef.current?.click()}
+                disabled={readingFile}
+                onClick={() => {
+                  if (!uploadRef.current) return;
+                  uploadRef.current.value = "";
+                  uploadRef.current.click();
+                }}
               >
                 Upload a photo
               </PlasticButton>
@@ -121,6 +139,12 @@ export default function IdentifyPage() {
               className="hidden"
               onChange={(event) => void onFile(event.target.files?.[0] ?? null)}
             />
+
+            {readingFile ? (
+              <p className="loading-pulse text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">
+                Reading image…
+              </p>
+            ) : null}
 
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -147,7 +171,11 @@ export default function IdentifyPage() {
               />
             </label>
 
-            <PlasticButton type="submit" fullWidth disabled={!preview}>
+            <PlasticButton
+              type="submit"
+              fullWidth
+              disabled={!preview || readingFile}
+            >
               Consult the Guide
             </PlasticButton>
 
