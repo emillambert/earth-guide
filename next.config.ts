@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Allow Cloudflare quick-tunnel hosts during local/dev previews.
+  allowedDevOrigins: ["*.trycloudflare.com"],
   headers: async () => [
     {
       source: "/sw.js",
