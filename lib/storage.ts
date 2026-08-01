@@ -4,14 +4,14 @@ const STORAGE_KEY = "earth-guide-v1";
 const MAX_RECENT = 20;
 export const STORAGE_EVENT = "earth-guide-storage";
 
-const DEFAULT_STATE: AppState = Object.freeze({
-  recentEntries: Object.freeze([]) as GuideEntry[],
-  savedEntries: Object.freeze([]) as SavedGuideEntry[],
+const DEFAULT_STATE: AppState = {
+  recentEntries: [],
+  savedEntries: [],
   hasOpenedGuide: false,
   soundEnabled: false,
   skipCover: false,
-  entryCache: Object.freeze({}) as Record<string, GuideEntry>,
-}) as AppState;
+  entryCache: {},
+};
 
 /** Stable server snapshot — must be referentially equal across calls. */
 const SERVER_SNAPSHOT: AppState = DEFAULT_STATE;
