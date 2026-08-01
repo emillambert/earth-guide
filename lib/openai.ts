@@ -17,7 +17,8 @@ import {
 } from "@/lib/prompts";
 import type { GuideEntry, GuideSupplement } from "@/types/guide";
 
-const MODEL = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+// Prefer a stronger model for voice/comedy quality; override with OPENAI_MODEL.
+const MODEL = process.env.OPENAI_MODEL ?? "gpt-4.1";
 
 function getClient() {
   const apiKey = process.env.OPENAI_API_KEY;
