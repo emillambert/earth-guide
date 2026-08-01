@@ -4,14 +4,20 @@ const STORAGE_KEY = "earth-guide-v1";
 const MAX_RECENT = 20;
 export const STORAGE_EVENT = "earth-guide-storage";
 
-const DEFAULT_STATE: AppState = {
-  recentEntries: [],
-  savedEntries: [],
+const DEFAULT_STATE: AppState = Object.freeze({
+  recentEntries: Object.freeze([]) as GuideEntry[],
+  savedEntries: Object.freeze([]) as SavedGuideEntry[],
   hasOpenedGuide: false,
   soundEnabled: false,
   skipCover: false,
-  entryCache: {},
-};
+  entryCache: Object.freeze({}) as Record<string, GuideEntry>,
+}) as AppState;
+
+/** Stable server snapshot — must be referentially equal across calls. */
+const SERVER_SNAPSHOT: AppState = DEFAULT_STATE;
+
+let cachedRaw: string | null | undefined = undefined;
+let cachedState: AppState = DEFAULT_STATE;
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
@@ -22,28 +28,46 @@ function notify(): void {
   window.dispatchEvent(new Event(STORAGE_EVENT));
 }
 
+function buildState(partial: Partial<AppState> = {}): AppState {
+  return {
+    hasOpenedGuide: partial.hasOpenedGuide ?? false,
+    soundEnabled: partial.soundEnabled ?? false,
+    skipCover: partial.skipCover ?? false,
+    recentEntries: partial.recentEntries ?? [],
+    savedEntries: partial.savedEntries ?? [],
+    entryCache: partial.entryCache ?? {},
+  };
+}
+
 export function loadState(): AppState {
-  if (!canUseStorage()) return { ...DEFAULT_STATE };
+  if (!canUseStorage()) return SERVER_SNAPSHOT;
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_STATE };
+    if (raw === cachedRaw) return cachedState;
+
+    cachedRaw = raw;
+    if (!raw) {
+      cachedState = DEFAULT_STATE;
+      return cachedState;
+    }
+
     const parsed = JSON.parse(raw) as Partial<AppState>;
-    return {
-      ...DEFAULT_STATE,
-      ...parsed,
-      recentEntries: parsed.recentEntries ?? [],
-      savedEntries: parsed.savedEntries ?? [],
-      entryCache: parsed.entryCache ?? {},
-    };
+    cachedState = buildState(parsed);
+    return cachedState;
   } catch {
-    return { ...DEFAULT_STATE };
+    cachedRaw = null;
+    cachedState = DEFAULT_STATE;
+    return cachedState;
   }
 }
 
 export function saveState(state: AppState): void {
   if (!canUseStorage()) return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const raw = JSON.stringify(state);
+  localStorage.setItem(STORAGE_KEY, raw);
+  cachedRaw = raw;
+  cachedState = state;
   notify();
 }
 
@@ -65,7 +89,7 @@ export function subscribeToStorage(onStoreChange: () => void): () => void {
 }
 
 export function getServerSnapshot(): AppState {
-  return { ...DEFAULT_STATE };
+  return SERVER_SNAPSHOT;
 }
 
 export function markGuideOpened(): AppState {
