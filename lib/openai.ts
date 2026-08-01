@@ -13,11 +13,10 @@ import {
 } from "@/lib/schemas";
 import {
   FACTUAL_DRAFT_SYSTEM,
-  FACTUAL_DRAFT_USER,
   FACTUAL_IDENTIFY_USER,
-  FACTUAL_LOCAL_USER,
   FOLLOW_UP_PROMPT,
   FOLLOW_UP_SYSTEM,
+  GUIDE_DIRECT_USER,
   GUIDE_REWRITE_SYSTEM,
   GUIDE_REWRITE_USER,
 } from "@/lib/prompts";
@@ -143,25 +142,38 @@ async function rewriteGuideVoice(input: {
   return guideRewriteSchema.parse(JSON.parse(text));
 }
 
+async function writeGuideEntry(userQuestion: string): Promise<GuideRewrite> {
+  const text = await createStructuredJson(
+    [
+      { role: "system", content: GUIDE_REWRITE_SYSTEM },
+      { role: "user", content: GUIDE_DIRECT_USER(userQuestion) },
+    ],
+    "guide_entry",
+    guideRewriteJsonSchema as unknown as Record<string, unknown>,
+  );
+
+  return guideRewriteSchema.parse(JSON.parse(text));
+}
+
 function toGuideEntry(
   rewrite: GuideRewrite,
-  draft: FactualDraft,
+  draft: FactualDraft | null,
   extras: Partial<GuideEntry> = {},
 ): GuideEntry {
   const confidence =
-    draft.confidence === null || draft.confidence === undefined
+    draft?.confidence === null || draft?.confidence === undefined
       ? extras.confidence
       : Math.round(draft.confidence);
 
   // Prefer draft safety text if rewrite omitted caution on a high-risk topic.
   const caution =
     rewrite.caution?.trim() ||
-    (draft.highRisk ? draft.safetyInformation.trim() : "") ||
+    (draft?.highRisk ? draft.safetyInformation.trim() : "") ||
     undefined;
 
   return {
     id: extras.id ?? randomUUID(),
-    title: rewrite.title.trim() || draft.title.trim(),
+    title: rewrite.title.trim() || draft?.title.trim() || "Guide Entry",
     verdict: rewrite.opening.trim(),
     body: rewrite.paragraphs.map((p) => p.trim()).filter(Boolean),
     travellerNote: rewrite.travellerAdvisory?.trim() || undefined,
@@ -169,27 +181,28 @@ function toGuideEntry(
     editorialNote: rewrite.editorialNote?.trim() || undefined,
     relatedEntries: rewrite.relatedEntries.map((r) => r.trim()).filter(Boolean),
     confidence,
-    sources: sanitizeSources(draft.sources),
+    sources: draft ? sanitizeSources(draft.sources) : [],
     generatedAt: extras.generatedAt ?? new Date().toISOString(),
     supplements: extras.supplements,
     query: extras.query,
     kind: extras.kind,
-    highRisk: Boolean(draft.highRisk) || Boolean(extras.highRisk),
+    highRisk:
+      Boolean(draft?.highRisk) ||
+      Boolean(extras.highRisk) ||
+      Boolean(rewrite.caution?.trim()),
   };
 }
 
-async function generateFromQuestion(
+async function generateDirectFromQuestion(
   userQuestion: string,
-  draftUserContent: OpenAI.Responses.ResponseInputMessageContentList | string,
   extras: Partial<GuideEntry>,
 ): Promise<GuideEntry> {
-  const draft = await draftFacts(draftUserContent);
-  const rewrite = await rewriteGuideVoice({ userQuestion, draft });
-  return toGuideEntry(rewrite, draft, extras);
+  const rewrite = await writeGuideEntry(userQuestion);
+  return toGuideEntry(rewrite, null, extras);
 }
 
 export async function generateEntry(query: string): Promise<GuideEntry> {
-  return generateFromQuestion(query, FACTUAL_DRAFT_USER(query), {
+  return generateDirectFromQuestion(query, {
     query,
     kind: "lookup",
   });
@@ -200,15 +213,11 @@ export async function generateLocalEntry(input: {
   longitude: number;
   placeName: string;
 }): Promise<GuideEntry> {
-  const question = `What should a traveller know about ${input.placeName}?`;
-  return generateFromQuestion(
-    question,
-    FACTUAL_LOCAL_USER(input.placeName, input.latitude, input.longitude),
-    {
-      query: input.placeName,
-      kind: "local",
-    },
-  );
+  const question = `What should a traveller know about ${input.placeName}? The supplied coordinates are ${input.latitude}, ${input.longitude}.`;
+  return generateDirectFromQuestion(question, {
+    query: input.placeName,
+    kind: "local",
+  });
 }
 
 export async function generateIdentifyEntry(input: {

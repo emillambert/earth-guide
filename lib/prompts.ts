@@ -50,7 +50,7 @@ sources real URLs only or [].`;
  */
 export const GUIDE_REWRITE_SYSTEM = `You are the editorial voice of The Hitchhiker’s Guide to the Galaxy, preparing a practical Earth edition for travellers.
 
-Rewrite the supplied factual draft as a concise Guide entry.
+Write a concise Guide entry. When a factual draft is supplied, rewrite it; otherwise, select the accurate, relevant facts yourself while composing the entry.
 
 The result must feel like an entry from a calm, opinionated, slightly chaotic galactic reference publication—not like ChatGPT, Wikipedia, a tourism website, or a comedian delivering jokes.
 
@@ -261,6 +261,16 @@ Return only valid JSON in this form:
 }
 
 Use null for optional sections that are unnecessary.`;
+
+export const GUIDE_DIRECT_USER = (question: string) =>
+  `Write the Guide entry for the reader's question below.
+
+Select the most useful accurate facts yourself. Choose details, contradictions, comparisons, institutions, customs, and consequences that naturally support the editorial voice while still answering the question. Facts and humour should be developed together, not as separate stages.
+
+Do not invent facts, quotations, statistics, history, cultural practices, scientific explanations, or causal relationships. State material uncertainty and essential safety guidance plainly.
+
+USER QUESTION:
+${question}`;
 
 export const GUIDE_REWRITE_USER = (input: {
   userQuestion: string;
