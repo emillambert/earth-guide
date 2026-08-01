@@ -36,8 +36,8 @@ export function GuideShell({
           </span>
         </div>
 
-        <div className="relative z-10 mx-3 mb-3 flex-1 overflow-hidden rounded-[0.85rem] border border-[#1a1b18] bg-[#151613] p-2 shadow-[var(--inset-shadow)] sm:mx-4 sm:mb-4">
-          <div className="guide-screen relative flex h-full min-h-0 flex-col overflow-hidden rounded-[0.55rem]">
+        <div className="relative z-10 mx-3 mb-3 flex flex-1 flex-col overflow-hidden rounded-[0.85rem] border border-[#1a1b18] bg-[#151613] p-2 shadow-[var(--inset-shadow)] sm:mx-4 sm:mb-4">
+          <div className="guide-screen relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[0.55rem]">
             <div className="guide-scanlines absolute inset-0 z-10" />
             <div className="relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden">
               {children}
