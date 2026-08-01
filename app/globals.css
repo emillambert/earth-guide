@@ -1,0 +1,228 @@
+@import "tailwindcss";
+
+:root {
+  --shell: #20211f;
+  --shell-light: #30322f;
+  --screen: #d8d7bb;
+  --screen-deep: #c9c8a8;
+  --screen-text: #20251f;
+  --screen-muted: #5a6257;
+  --button: #3a3c38;
+  --button-border: #575a54;
+  --button-face: #454843;
+  --warning: #8b2f2f;
+  --highlight: #c4b85e;
+  --inset-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.45);
+  --screen-glow: inset 0 0 40px rgba(32, 37, 31, 0.08);
+}
+
+@theme inline {
+  --color-shell: var(--shell);
+  --color-shell-light: var(--shell-light);
+  --color-screen: var(--screen);
+  --color-screen-deep: var(--screen-deep);
+  --color-screen-text: var(--screen-text);
+  --color-screen-muted: var(--screen-muted);
+  --color-guide-button: var(--button);
+  --color-guide-button-border: var(--button-border);
+  --color-warning: var(--warning);
+  --color-highlight: var(--highlight);
+  --font-mono: var(--font-guide-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #121311;
+  color: var(--screen-text);
+  font-family: var(--font-guide-mono), ui-monospace, monospace;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--highlight) 55%, transparent);
+  color: var(--screen-text);
+}
+
+.guide-shell {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.04), transparent 28%),
+    radial-gradient(circle at 80% 0%, rgba(196, 184, 94, 0.05), transparent 35%),
+    linear-gradient(160deg, #2a2b28 0%, var(--shell) 45%, #181916 100%);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.guide-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.18;
+  background-image:
+    repeating-linear-gradient(
+      125deg,
+      transparent 0 7px,
+      rgba(255, 255, 255, 0.015) 7px 8px
+    ),
+    radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.04), transparent 20%);
+  mix-blend-mode: soft-light;
+}
+
+.guide-screen {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 28%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(32, 37, 31, 0.035) 2px,
+      rgba(32, 37, 31, 0.035) 3px
+    ),
+    var(--screen);
+  box-shadow: var(--screen-glow), inset 0 0 0 1px rgba(32, 37, 31, 0.12);
+  color: var(--screen-text);
+}
+
+.guide-scanlines {
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(32, 37, 31, 0.03) 50%
+  );
+  background-size: 100% 3px;
+  opacity: 0.55;
+}
+
+.plastic-button {
+  background: linear-gradient(180deg, var(--button-face), var(--button));
+  border: 1px solid var(--button-border);
+  box-shadow:
+    0 2px 0 #1b1c1a,
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #e7e5d2;
+  transition: transform 80ms ease, filter 80ms ease, background 120ms ease;
+}
+
+.plastic-button:hover {
+  filter: brightness(1.06);
+}
+
+.plastic-button:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 #1b1c1a,
+    inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.plastic-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.plastic-button-secondary {
+  background: color-mix(in srgb, var(--screen-deep) 70%, #b7b691);
+  border: 1px solid color-mix(in srgb, var(--screen-muted) 55%, transparent);
+  color: var(--screen-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.lookup-field {
+  background: color-mix(in srgb, var(--screen-deep) 80%, #bdbb99);
+  border: 1px solid color-mix(in srgb, var(--screen-muted) 50%, transparent);
+  box-shadow: inset 0 2px 5px rgba(32, 37, 31, 0.18);
+}
+
+.lookup-field:focus {
+  outline: 2px solid color-mix(in srgb, var(--highlight) 70%, transparent);
+  outline-offset: 1px;
+}
+
+.cursor-blink::after {
+  content: "▋";
+  margin-left: 2px;
+  animation: blink 1.05s steps(1) infinite;
+  color: var(--screen-muted);
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes cover-open {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-8%) scale(0.985);
+    opacity: 0;
+  }
+}
+
+.cover-exit {
+  animation: cover-open 420ms ease-in forwards;
+}
+
+@keyframes terminal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.terminal-enter {
+  animation: terminal-fade 320ms ease-out both;
+}
+
+@keyframes pulse-line {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.loading-pulse {
+  animation: pulse-line 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-exit,
+  .terminal-enter,
+  .cursor-blink::after,
+  .loading-pulse {
+    animation: none;
+  }
+}
