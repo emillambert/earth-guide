@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     "The Hitchhiker’s Guide to the Galaxy — practical Earth edition. Look anything up. Don’t panic.",
   applicationName: "The Hitchhiker’s Guide to the Galaxy",
-  manifest: "/manifest.webmanifest",
+  manifest: "/hitchhikers-guide.webmanifest",
   appleWebApp: {
     capable: true,
     // Keep status bar readable; content still uses safe-area insets below.
@@ -23,11 +23,28 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/icon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      {
+        url: "/icons/hitchhikers-icon-32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        url: "/icons/hitchhikers-icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/icons/hitchhikers-icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    apple: [
+      {
+        url: "/icons/hitchhikers-apple-touch-icon.png",
+        sizes: "180x180",
+      },
+    ],
   },
 };
 
