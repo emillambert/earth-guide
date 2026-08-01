@@ -1,7 +1,7 @@
 {
-  "name": "The Guide",
-  "short_name": "Guide",
-  "description": "A portable electronic reference guide to Earth.",
+  "name": "The Hitchhiker’s Guide to the Galaxy",
+  "short_name": "Hitchhiker’s Guide",
+  "description": "The Hitchhiker’s Guide to the Galaxy — practical Earth edition.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121311",

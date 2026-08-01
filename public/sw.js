@@ -1,4 +1,4 @@
-const CACHE_NAME = "earth-guide-shell-v3";
+const CACHE_NAME = "hitchhikers-guide-shell-v4";
 const SHELL_ASSETS = [
   "/",
   "/cover",
