@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "react";
 import { streamEntry } from "@/lib/apiClient";
 import { cacheEntry } from "@/lib/storage";
 import type { GuideProgress } from "@/lib/progressiveJson";
-import type { GuideEntry } from "@/types/guide";
 
 type EntryRequest = {
   query?: string;
