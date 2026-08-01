@@ -1,4 +1,4 @@
-const CACHE_NAME = "hitchhikers-guide-shell-v4";
+const CACHE_NAME = "hitchhikers-guide-shell-v5";
 const SHELL_ASSETS = [
   "/",
   "/cover",
@@ -6,9 +6,9 @@ const SHELL_ASSETS = [
   "/saved",
   "/identify",
   "/offline",
-  "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/hitchhikers-guide.webmanifest",
+  "/icons/hitchhikers-icon-192.png",
+  "/icons/hitchhikers-icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
