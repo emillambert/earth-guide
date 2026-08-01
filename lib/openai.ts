@@ -17,7 +17,7 @@ import {
   FOLLOW_UP_PROMPT,
   FOLLOW_UP_SYSTEM,
   GUIDE_DIRECT_USER,
-  GUIDE_REWRITE_SYSTEM,
+  GUIDE_STYLE_SYSTEM,
   GUIDE_REWRITE_USER,
 } from "@/lib/prompts";
 import type { GuideEntry, GuideSupplement } from "@/types/guide";
@@ -124,7 +124,7 @@ async function rewriteGuideVoice(input: {
 }): Promise<GuideRewrite> {
   const text = await createStructuredJson(
     [
-      { role: "system", content: GUIDE_REWRITE_SYSTEM },
+      { role: "system", content: GUIDE_STYLE_SYSTEM },
       {
         role: "user",
         content: GUIDE_REWRITE_USER({
@@ -145,7 +145,7 @@ async function rewriteGuideVoice(input: {
 async function writeGuideEntry(userQuestion: string): Promise<GuideRewrite> {
   const text = await createStructuredJson(
     [
-      { role: "system", content: GUIDE_REWRITE_SYSTEM },
+      { role: "system", content: GUIDE_STYLE_SYSTEM },
       { role: "user", content: GUIDE_DIRECT_USER(userQuestion) },
     ],
     "guide_entry",
@@ -164,7 +164,7 @@ async function writeGuideEntryStreaming(
     {
       model: MODEL,
       input: [
-        { role: "system", content: GUIDE_REWRITE_SYSTEM },
+        { role: "system", content: GUIDE_STYLE_SYSTEM },
         { role: "user", content: GUIDE_DIRECT_USER(userQuestion) },
       ],
       text: {
