@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { PlasticButton } from "@/components/PlasticButton";
 import { LoadingDisplay } from "@/components/LoadingDisplay";
+import { Notice } from "@/components/Notice";
+import { PageNav } from "@/components/PageNav";
 import { fetchIdentifyEntry } from "@/lib/apiClient";
 import { cacheEntry } from "@/lib/storage";
 
@@ -71,19 +72,11 @@ export default function IdentifyPage() {
   return (
     <GuideShell>
       <GuideScreen>
+        <PageNav />
         {loading ? (
           <LoadingDisplay label="Inspecting image" />
         ) : (
           <form onSubmit={handleSubmit} className="terminal-enter space-y-5 pb-4">
-            <div className="flex items-center justify-between gap-3">
-              <Link
-                href="/guide"
-                className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
-              >
-                ← Index
-              </Link>
-            </div>
-
             <header className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
                 Visual consultation
@@ -96,9 +89,9 @@ export default function IdentifyPage() {
               </p>
             </header>
 
-            <div className="grid gap-2">
+            {!preview ? (
+              <div className="grid grid-cols-2 gap-2">
               <PlasticButton
-                fullWidth
                 type="button"
                 disabled={readingFile}
                 onClick={() => {
@@ -110,7 +103,6 @@ export default function IdentifyPage() {
                 Take a photo
               </PlasticButton>
               <PlasticButton
-                fullWidth
                 type="button"
                 variant="secondary"
                 disabled={readingFile}
@@ -122,13 +114,15 @@ export default function IdentifyPage() {
               >
                 Upload a photo
               </PlasticButton>
-            </div>
+              </div>
+            ) : null}
 
             <input
               ref={cameraRef}
               type="file"
               accept="image/*"
               capture="environment"
+              aria-label="Take a photo"
               className="hidden"
               onChange={(event) => void onFile(event.target.files?.[0] ?? null)}
             />
@@ -136,38 +130,70 @@ export default function IdentifyPage() {
               ref={uploadRef}
               type="file"
               accept="image/*"
+              aria-label="Upload a photo"
               className="hidden"
               onChange={(event) => void onFile(event.target.files?.[0] ?? null)}
             />
 
             {readingFile ? (
-              <p className="loading-pulse text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">
+              <p
+                role="status"
+                className="loading-pulse text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]"
+              >
                 Reading image…
               </p>
             ) : null}
 
             {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={preview}
-                alt="Selected for identification"
-                className="max-h-64 w-full border border-[color:var(--screen-muted)]/40 object-cover"
-              />
+              <div className="space-y-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={preview}
+                  alt="Selected for identification"
+                  className="max-h-64 w-full border border-[color:var(--screen-muted)]/40 object-cover"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <PlasticButton
+                    type="button"
+                    variant="secondary"
+                    disabled={readingFile}
+                    onClick={() => {
+                      if (!uploadRef.current) return;
+                      uploadRef.current.value = "";
+                      uploadRef.current.click();
+                    }}
+                  >
+                    Change photo
+                  </PlasticButton>
+                  <PlasticButton
+                    type="button"
+                    variant="secondary"
+                    disabled={readingFile}
+                    onClick={() => {
+                      setPreview(null);
+                      setError(null);
+                    }}
+                  >
+                    Remove
+                  </PlasticButton>
+                </div>
+              </div>
             ) : (
               <div className="flex h-40 items-center justify-center border border-dashed border-[color:var(--screen-muted)]/40 text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">
                 No image selected
               </div>
             )}
 
-            <label className="block space-y-2">
+            <label htmlFor="identify-question" className="block space-y-2">
               <span className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
                 Optional question
               </span>
               <input
+                id="identify-question"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 placeholder="What bird is this? Can I eat this?"
-                className="lookup-field w-full min-h-12 px-3 py-3 text-sm"
+                className="lookup-field min-h-12 w-full px-3 py-3 text-base"
               />
             </label>
 
@@ -176,13 +202,11 @@ export default function IdentifyPage() {
               fullWidth
               disabled={!preview || readingFile}
             >
-              Consult the Guide
+              Identify
             </PlasticButton>
 
             {error ? (
-              <p className="border border-[color:var(--warning)]/50 px-3 py-2 text-sm text-[color:var(--warning)]">
-                {error}
-              </p>
+              <Notice>{error}</Notice>
             ) : null}
           </form>
         )}

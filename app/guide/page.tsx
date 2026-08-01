@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
@@ -9,32 +9,19 @@ import { SearchPanel } from "@/components/SearchPanel";
 import { PlasticButton } from "@/components/PlasticButton";
 import { LoadingDisplay } from "@/components/LoadingDisplay";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { Notice } from "@/components/Notice";
 import { fetchLocalEntry } from "@/lib/apiClient";
 import { requestCoordinates, reverseGeocode } from "@/lib/location";
 import { cacheEntry, setSoundEnabled } from "@/lib/storage";
 import { beginEntryGeneration } from "@/lib/pendingEntries";
 import { useAppState } from "@/lib/useAppState";
 import type { GuideEntry } from "@/types/guide";
-import { EDITORIAL_STATUS_LINES } from "@/lib/prompts";
 
 export default function IndexPage() {
   const router = useRouter();
   const state = useAppState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [statusIndex, setStatusIndex] = useState(0);
-
-  const statusLine = useMemo(
-    () => EDITORIAL_STATUS_LINES[statusIndex % EDITORIAL_STATUS_LINES.length],
-    [statusIndex],
-  );
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setStatusIndex((value) => value + 1);
-    }, 8000);
-    return () => window.clearInterval(id);
-  }, []);
 
   function openEntry(entry: GuideEntry) {
     cacheEntry(entry);
@@ -69,59 +56,65 @@ export default function IndexPage() {
   }
 
   return (
-    <GuideShell footer={statusLine}>
+    <GuideShell>
       <GuideScreen>
         {loading ? (
           <LoadingDisplay label="Consulting index" />
         ) : (
-          <div className="terminal-enter space-y-6 pb-4">
+          <div className="terminal-enter space-y-7 pb-4">
             <header className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
-                Edition 42.1 — Earth Field Supplement
+                Current supplement
               </p>
-              <h1 className="text-2xl font-semibold uppercase leading-tight tracking-[0.06em]">
-                The Hitchhiker&apos;s Guide
-                <span className="block text-lg text-[color:var(--screen-muted)]">
-                  to the Galaxy
-                </span>
+              <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+                Earth index
               </h1>
-              <p className="text-sm uppercase tracking-[0.12em] text-[color:var(--screen-muted)]">
-                Look up anything
+              <p className="text-sm leading-relaxed text-[color:var(--screen-muted)]">
+                Ask about a place, object, custom, creature, or avoidable mistake.
               </p>
             </header>
 
             <SearchPanel onSubmit={consult} disabled={loading} />
 
-            <div className="grid gap-2">
-              <PlasticButton fullWidth onClick={() => void localEntry()}>
-                Local entry
+            <section className="space-y-2">
+              <h2 className="text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)]">
+                Field tools
+              </h2>
+              <div className="grid grid-cols-3 gap-2">
+              <PlasticButton
+                variant="secondary"
+                className="px-2 text-xs"
+                onClick={() => void localEntry()}
+              >
+                Nearby
               </PlasticButton>
               <PlasticButton
-                fullWidth
                 variant="secondary"
+                className="px-2 text-xs"
                 onClick={() => router.push("/identify")}
               >
                 Identify
               </PlasticButton>
               <PlasticButton
-                fullWidth
                 variant="secondary"
+                className="px-2 text-xs"
                 onClick={surprise}
               >
-                Surprise me
+                Surprise
               </PlasticButton>
-            </div>
+              </div>
+            </section>
 
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
-                  Recently consulted
+                  Recent
                 </h2>
                 <Link
                   href="/saved"
-                  className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
+                  className="inline-flex min-h-11 items-center px-2 text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
                 >
-                  Saved entries
+                  Saved →
                 </Link>
               </div>
               {state.recentEntries.length ? (
@@ -130,10 +123,10 @@ export default function IndexPage() {
                     <li key={entry.id}>
                       <button
                         type="button"
-                        onClick={() => router.push(`/entry/${entry.id}`)}
-                        className="w-full border border-[color:var(--screen-muted)]/30 px-3 py-3 text-left text-sm uppercase tracking-[0.04em] hover:bg-[color:var(--screen-deep)]"
+                        onClick={() => openEntry(entry)}
+                        className="flex min-h-12 w-full items-center border-b border-[color:var(--screen-muted)]/25 px-2 py-3 text-left text-sm hover:bg-[color:var(--screen-deep)] focus-visible:outline-2 focus-visible:outline-[color:var(--highlight)]"
                       >
-                        • {entry.title}
+                        {entry.title}
                       </button>
                     </li>
                   ))}
@@ -145,32 +138,35 @@ export default function IndexPage() {
               )}
             </section>
 
-            <label className="flex items-start gap-3 text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)]">
-              <input
-                type="checkbox"
-                checked={state.soundEnabled}
-                onChange={(event) => {
-                  setSoundEnabled(event.target.checked);
-                }}
-                className="mt-0.5 h-4 w-4 accent-[color:var(--highlight)]"
-              />
-              <span>Button click sounds</span>
-            </label>
-
-            <InstallPrompt />
-
             {error ? (
-              <p className="border border-[color:var(--warning)]/50 px-3 py-2 text-sm text-[color:var(--warning)]">
-                {error}
-              </p>
+              <Notice>{error}</Notice>
             ) : null}
 
-            <Link
-              href="/cover"
-              className="inline-block text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
-            >
-              Return to cover
-            </Link>
+            <details className="border-t border-[color:var(--screen-muted)]/25 pt-3">
+              <summary className="flex min-h-11 cursor-pointer items-center text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">
+                Terminal settings
+              </summary>
+              <div className="space-y-4 pb-2 pt-2">
+                <label className="flex min-h-12 items-center gap-3 text-xs uppercase tracking-[0.1em] text-[color:var(--screen-muted)]">
+                  <input
+                    type="checkbox"
+                    checked={state.soundEnabled}
+                    onChange={(event) => {
+                      setSoundEnabled(event.target.checked);
+                    }}
+                    className="h-5 w-5 shrink-0 accent-[color:var(--highlight)]"
+                  />
+                  <span>Button click sounds</span>
+                </label>
+                <InstallPrompt />
+                <Link
+                  href="/cover"
+                  className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
+                >
+                  View cover
+                </Link>
+              </div>
+            </details>
           </div>
         )}
       </GuideScreen>

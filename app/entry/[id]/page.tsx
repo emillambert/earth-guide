@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
@@ -9,6 +8,8 @@ import { GuideEntryView } from "@/components/GuideEntryView";
 import { ProgressiveGuideEntry } from "@/components/ProgressiveGuideEntry";
 import { PlasticButton } from "@/components/PlasticButton";
 import { LoadingDisplay } from "@/components/LoadingDisplay";
+import { Notice } from "@/components/Notice";
+import { PageNav } from "@/components/PageNav";
 import { fetchFollowUp } from "@/lib/apiClient";
 import {
   beginEntryGeneration,
@@ -74,38 +75,21 @@ function EntryContent({ id }: { id: string }) {
           <h1 className="text-xl font-semibold uppercase tracking-[0.04em]">
             {pending.progress.title ?? pending.query}
           </h1>
-          <p className="border border-[color:var(--warning)]/50 px-3 py-3 text-sm text-[color:var(--warning)]">
-            {pending.error}
-          </p>
+          <Notice>{pending.error}</Notice>
         </div>
-        <div className="grid gap-2">
-          <PlasticButton
-            fullWidth
-            onClick={() => retryEntryGeneration(id)}
-          >
-            Retry transmission
-          </PlasticButton>
-          <PlasticButton
-            fullWidth
-            variant="secondary"
-            onClick={() => router.push("/guide")}
-          >
-            Return to index
-          </PlasticButton>
-        </div>
+        <PlasticButton fullWidth onClick={() => retryEntryGeneration(id)}>
+          Retry transmission
+        </PlasticButton>
       </div>
     );
   }
 
   if (!entry) {
     return (
-      <div className="space-y-4 py-8">
-        <p className="text-sm leading-relaxed">
+      <div className="py-8">
+        <Notice tone="muted" role="status">
           This entry is no longer held in local memory.
-        </p>
-        <PlasticButton fullWidth onClick={() => router.push("/guide")}>
-          Return to index
-        </PlasticButton>
+        </Notice>
       </div>
     );
   }
@@ -127,20 +111,7 @@ export default function EntryPage() {
   return (
     <GuideShell>
       <GuideScreen>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <Link
-            href="/guide"
-            className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
-          >
-            ← Index
-          </Link>
-          <Link
-            href="/saved"
-            className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
-          >
-            Saved
-          </Link>
-        </div>
+        <PageNav saved />
 
         {id ? <EntryContent key={id} id={id} /> : null}
       </GuideScreen>

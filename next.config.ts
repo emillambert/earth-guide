@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       ],
     },
     {
-      source: "/manifest.webmanifest",
+      source: "/hitchhikers-guide.webmanifest",
       headers: [
         {
           key: "Content-Type",

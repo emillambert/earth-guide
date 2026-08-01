@@ -54,6 +54,14 @@ textarea {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 ::selection {
   background: color-mix(in srgb, var(--highlight) 55%, transparent);
   color: var(--screen-text);
@@ -223,7 +231,8 @@ textarea {
   .cover-exit,
   .terminal-enter,
   .cursor-blink::after,
-  .loading-pulse {
-    animation: none;
+  .loading-pulse,
+  .animate-pulse {
+    animation: none !important;
   }
 }

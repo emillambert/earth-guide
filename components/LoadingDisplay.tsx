@@ -18,7 +18,12 @@ export function LoadingDisplay({ label }: Props) {
   }, []);
 
   return (
-    <div className="flex flex-1 flex-col justify-center gap-4 py-10">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="flex flex-1 flex-col justify-center gap-4 py-10"
+    >
       <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--screen-muted)]">
         {label ?? "Working"}
       </p>
