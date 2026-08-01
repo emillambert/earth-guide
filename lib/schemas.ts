@@ -19,8 +19,7 @@ export const factualDraftSchema = z.object({
 /** Stage 2: Guide voice rewrite (matches product prompt) */
 export const guideRewriteSchema = z.object({
   title: z.string(),
-  opening: z.string(),
-  paragraphs: z.array(z.string()).min(1).max(6),
+  body: z.string().min(1),
   travellerAdvisory: z.string().optional().nullable(),
   caution: z.string().optional().nullable(),
   editorialNote: z.string().optional().nullable(),
@@ -76,13 +75,7 @@ export const guideRewriteJsonSchema = {
   additionalProperties: false,
   properties: {
     title: { type: "string" },
-    opening: { type: "string" },
-    paragraphs: {
-      type: "array",
-      items: { type: "string" },
-      minItems: 1,
-      maxItems: 6,
-    },
+    body: { type: "string" },
     travellerAdvisory: { type: ["string", "null"] },
     caution: { type: ["string", "null"] },
     editorialNote: { type: ["string", "null"] },
@@ -95,8 +88,7 @@ export const guideRewriteJsonSchema = {
   },
   required: [
     "title",
-    "opening",
-    "paragraphs",
+    "body",
     "travellerAdvisory",
     "caution",
     "editorialNote",
