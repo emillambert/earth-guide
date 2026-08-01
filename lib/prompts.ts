@@ -241,7 +241,26 @@ Revise internally if necessary.
 
 Output format
 
-Return only valid JSON matching the requested schema. Use null for optional sections that are unnecessary.`;
+Return only valid JSON in this form:
+
+{
+"title": "Short entry title",
+"opening": "Memorable opening paragraph",
+"paragraphs": [
+"Factual paragraph one.",
+"Factual paragraph two."
+],
+"travellerAdvisory": null,
+"caution": null,
+"editorialNote": null,
+"relatedEntries": [
+"Related subject one",
+"Related subject two",
+"Related subject three"
+]
+}
+
+Use null for optional sections that are unnecessary.`;
 
 export const GUIDE_REWRITE_USER = (input: {
   userQuestion: string;
