@@ -13,17 +13,31 @@ export function InstallPrompt() {
     null,
   );
   const [dismissed, setDismissed] = useState(false);
+  const [showIosInstructions, setShowIosInstructions] = useState(false);
 
   useEffect(() => {
+    const isIos =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+    const frame = window.requestAnimationFrame(() => {
+      setShowIosInstructions(isIos && !isStandalone);
+    });
+
     const handler = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
 
-  if (!deferred || dismissed) return null;
+  if (dismissed || (!deferred && !showIosInstructions)) return null;
 
   return (
     <div className="space-y-2 border border-[color:var(--screen-muted)]/35 px-3 py-3">
@@ -31,19 +45,23 @@ export function InstallPrompt() {
         Install this terminal
       </p>
       <p className="text-sm leading-relaxed">
-        Add the Guide to your home screen for faster consultation.
+        {deferred
+          ? "Add the Guide to your home screen for faster consultation."
+          : "In Safari, tap Share, then Add to Home Screen."}
       </p>
-      <div className="grid grid-cols-2 gap-2">
-        <PlasticButton
-          onClick={async () => {
-            await deferred.prompt();
-            setDeferred(null);
-          }}
-        >
-          Install
-        </PlasticButton>
+      <div className={deferred ? "grid grid-cols-2 gap-2" : "grid gap-2"}>
+        {deferred ? (
+          <PlasticButton
+            onClick={async () => {
+              await deferred.prompt();
+              setDeferred(null);
+            }}
+          >
+            Install
+          </PlasticButton>
+        ) : null}
         <PlasticButton variant="secondary" onClick={() => setDismissed(true)}>
-          Later
+          {deferred ? "Later" : "Got it"}
         </PlasticButton>
       </div>
     </div>

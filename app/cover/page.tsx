@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { PlasticButton } from "@/components/PlasticButton";
 import { markGuideOpened, setSkipCover } from "@/lib/storage";
@@ -9,14 +9,15 @@ import { useAppState } from "@/lib/useAppState";
 
 export default function CoverPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const state = useAppState();
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    if (state.skipCover && state.hasOpenedGuide) {
+    if (pathname === "/" && state.skipCover && state.hasOpenedGuide) {
       router.replace("/guide");
     }
-  }, [router, state.hasOpenedGuide, state.skipCover]);
+  }, [pathname, router, state.hasOpenedGuide, state.skipCover]);
 
   function openGuide() {
     if (exiting) return;
