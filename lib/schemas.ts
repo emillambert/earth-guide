@@ -5,16 +5,26 @@ export const guideSourceSchema = z.object({
   url: z.string(),
 });
 
-export const guideEntrySchema = z.object({
+/** Stage 1: plain facts */
+export const factualDraftSchema = z.object({
   title: z.string(),
-  verdict: z.string(),
-  body: z.array(z.string()).min(1).max(6),
-  travellerNote: z.string().optional().nullable(),
-  caution: z.string().optional().nullable(),
-  relatedEntries: z.array(z.string()).min(2).max(8),
+  draft: z.string().min(1),
+  uncertainties: z.string(),
+  safetyInformation: z.string(),
+  highRisk: z.boolean(),
   confidence: z.number().min(0).max(100).optional().nullable(),
   sources: z.array(guideSourceSchema),
-  highRisk: z.boolean().optional().nullable(),
+});
+
+/** Stage 2: Guide voice rewrite (matches product prompt) */
+export const guideRewriteSchema = z.object({
+  title: z.string(),
+  opening: z.string(),
+  paragraphs: z.array(z.string()).min(1).max(6),
+  travellerAdvisory: z.string().optional().nullable(),
+  caution: z.string().optional().nullable(),
+  editorialNote: z.string().optional().nullable(),
+  relatedEntries: z.array(z.string()).min(2).max(8),
 });
 
 export const followUpSchema = z.object({
@@ -23,30 +33,19 @@ export const followUpSchema = z.object({
   relatedEntries: z.array(z.string()).max(6).optional().nullable(),
 });
 
-export type GeneratedGuideEntry = z.infer<typeof guideEntrySchema>;
+export type FactualDraft = z.infer<typeof factualDraftSchema>;
+export type GuideRewrite = z.infer<typeof guideRewriteSchema>;
 export type GeneratedFollowUp = z.infer<typeof followUpSchema>;
 
-/** JSON Schema for OpenAI structured outputs (strict mode). */
-export const guideEntryJsonSchema = {
+export const factualDraftJsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
     title: { type: "string" },
-    verdict: { type: "string" },
-    body: {
-      type: "array",
-      items: { type: "string" },
-      minItems: 1,
-      maxItems: 6,
-    },
-    travellerNote: { type: ["string", "null"] },
-    caution: { type: ["string", "null"] },
-    relatedEntries: {
-      type: "array",
-      items: { type: "string" },
-      minItems: 2,
-      maxItems: 8,
-    },
+    draft: { type: "string" },
+    uncertainties: { type: "string" },
+    safetyInformation: { type: "string" },
+    highRisk: { type: "boolean" },
     confidence: { type: ["number", "null"] },
     sources: {
       type: "array",
@@ -60,18 +59,48 @@ export const guideEntryJsonSchema = {
         required: ["title", "url"],
       },
     },
-    highRisk: { type: ["boolean", "null"] },
   },
   required: [
     "title",
-    "verdict",
-    "body",
-    "travellerNote",
-    "caution",
-    "relatedEntries",
+    "draft",
+    "uncertainties",
+    "safetyInformation",
+    "highRisk",
     "confidence",
     "sources",
-    "highRisk",
+  ],
+} as const;
+
+export const guideRewriteJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    title: { type: "string" },
+    opening: { type: "string" },
+    paragraphs: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 1,
+      maxItems: 6,
+    },
+    travellerAdvisory: { type: ["string", "null"] },
+    caution: { type: ["string", "null"] },
+    editorialNote: { type: ["string", "null"] },
+    relatedEntries: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 2,
+      maxItems: 8,
+    },
+  },
+  required: [
+    "title",
+    "opening",
+    "paragraphs",
+    "travellerAdvisory",
+    "caution",
+    "editorialNote",
+    "relatedEntries",
   ],
 } as const;
 

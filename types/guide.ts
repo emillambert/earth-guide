@@ -12,10 +12,12 @@ export type GuideSupplement = {
 export type GuideEntry = {
   id: string;
   title: string;
+  /** Opening / memorable first paragraph (Guide voice). */
   verdict: string;
   body: string[];
   travellerNote?: string;
   caution?: string;
+  editorialNote?: string;
   relatedEntries: string[];
   confidence?: number;
   sources: GuideSource[];

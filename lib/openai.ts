@@ -1,23 +1,28 @@
 import OpenAI from "openai";
 import { randomUUID } from "crypto";
 import {
+  factualDraftJsonSchema,
+  factualDraftSchema,
   followUpJsonSchema,
   followUpSchema,
-  guideEntryJsonSchema,
-  guideEntrySchema,
+  guideRewriteJsonSchema,
+  guideRewriteSchema,
+  type FactualDraft,
   type GeneratedFollowUp,
-  type GeneratedGuideEntry,
+  type GuideRewrite,
 } from "@/lib/schemas";
 import {
-  ENTRY_USER_PROMPT,
+  FACTUAL_DRAFT_SYSTEM,
+  FACTUAL_DRAFT_USER,
+  FACTUAL_IDENTIFY_USER,
+  FACTUAL_LOCAL_USER,
   FOLLOW_UP_PROMPT,
-  IDENTIFY_PROMPT,
-  LOCAL_ENTRY_PROMPT,
-  SYSTEM_PROMPT,
+  FOLLOW_UP_SYSTEM,
+  GUIDE_REWRITE_SYSTEM,
+  GUIDE_REWRITE_USER,
 } from "@/lib/prompts";
 import type { GuideEntry, GuideSupplement } from "@/types/guide";
 
-// Sol for literary/comic quality; override with OPENAI_MODEL if needed.
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.6-sol";
 
 function getClient() {
@@ -48,7 +53,7 @@ function extractOutputText(response: OpenAI.Responses.Response): string {
 }
 
 function sanitizeSources(
-  sources: GeneratedGuideEntry["sources"],
+  sources: FactualDraft["sources"],
 ): GuideEntry["sources"] {
   return sources
     .filter((source) => {
@@ -63,33 +68,6 @@ function sanitizeSources(
       title: source.title.trim() || "Source",
       url: source.url,
     }));
-}
-
-function toGuideEntry(
-  generated: GeneratedGuideEntry,
-  extras: Partial<GuideEntry> = {},
-): GuideEntry {
-  const confidence =
-    generated.confidence === null || generated.confidence === undefined
-      ? undefined
-      : Math.round(generated.confidence);
-
-  return {
-    id: extras.id ?? randomUUID(),
-    title: generated.title.trim(),
-    verdict: generated.verdict.trim(),
-    body: generated.body.map((p) => p.trim()).filter(Boolean),
-    travellerNote: generated.travellerNote?.trim() || undefined,
-    caution: generated.caution?.trim() || undefined,
-    relatedEntries: generated.relatedEntries.map((r) => r.trim()).filter(Boolean),
-    confidence,
-    sources: sanitizeSources(generated.sources),
-    generatedAt: extras.generatedAt ?? new Date().toISOString(),
-    supplements: extras.supplements,
-    query: extras.query,
-    kind: extras.kind,
-    highRisk: Boolean(generated.highRisk) || Boolean(extras.highRisk),
-  };
 }
 
 async function createStructuredJson(
@@ -118,18 +96,103 @@ async function createStructuredJson(
   return text;
 }
 
-export async function generateEntry(query: string): Promise<GuideEntry> {
+async function draftFacts(
+  userContent: OpenAI.Responses.ResponseInputMessageContentList | string,
+): Promise<FactualDraft> {
+  const content =
+    typeof userContent === "string"
+      ? userContent
+      : userContent;
+
   const text = await createStructuredJson(
     [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: ENTRY_USER_PROMPT(query) },
+      { role: "system", content: FACTUAL_DRAFT_SYSTEM },
+      {
+        role: "user",
+        content,
+      },
     ],
-    "guide_entry",
-    guideEntryJsonSchema as unknown as Record<string, unknown>,
+    "factual_draft",
+    factualDraftJsonSchema as unknown as Record<string, unknown>,
   );
 
-  const parsed = guideEntrySchema.parse(JSON.parse(text));
-  return toGuideEntry(parsed, { query, kind: "lookup" });
+  return factualDraftSchema.parse(JSON.parse(text));
+}
+
+async function rewriteGuideVoice(input: {
+  userQuestion: string;
+  draft: FactualDraft;
+}): Promise<GuideRewrite> {
+  const text = await createStructuredJson(
+    [
+      { role: "system", content: GUIDE_REWRITE_SYSTEM },
+      {
+        role: "user",
+        content: GUIDE_REWRITE_USER({
+          userQuestion: input.userQuestion,
+          factualDraft: `${input.draft.title}\n\n${input.draft.draft}`,
+          uncertainties: input.draft.uncertainties,
+          safetyInformation: input.draft.safetyInformation,
+        }),
+      },
+    ],
+    "guide_rewrite",
+    guideRewriteJsonSchema as unknown as Record<string, unknown>,
+  );
+
+  return guideRewriteSchema.parse(JSON.parse(text));
+}
+
+function toGuideEntry(
+  rewrite: GuideRewrite,
+  draft: FactualDraft,
+  extras: Partial<GuideEntry> = {},
+): GuideEntry {
+  const confidence =
+    draft.confidence === null || draft.confidence === undefined
+      ? extras.confidence
+      : Math.round(draft.confidence);
+
+  // Prefer draft safety text if rewrite omitted caution on a high-risk topic.
+  const caution =
+    rewrite.caution?.trim() ||
+    (draft.highRisk ? draft.safetyInformation.trim() : "") ||
+    undefined;
+
+  return {
+    id: extras.id ?? randomUUID(),
+    title: rewrite.title.trim() || draft.title.trim(),
+    verdict: rewrite.opening.trim(),
+    body: rewrite.paragraphs.map((p) => p.trim()).filter(Boolean),
+    travellerNote: rewrite.travellerAdvisory?.trim() || undefined,
+    caution: caution || undefined,
+    editorialNote: rewrite.editorialNote?.trim() || undefined,
+    relatedEntries: rewrite.relatedEntries.map((r) => r.trim()).filter(Boolean),
+    confidence,
+    sources: sanitizeSources(draft.sources),
+    generatedAt: extras.generatedAt ?? new Date().toISOString(),
+    supplements: extras.supplements,
+    query: extras.query,
+    kind: extras.kind,
+    highRisk: Boolean(draft.highRisk) || Boolean(extras.highRisk),
+  };
+}
+
+async function generateFromQuestion(
+  userQuestion: string,
+  draftUserContent: OpenAI.Responses.ResponseInputMessageContentList | string,
+  extras: Partial<GuideEntry>,
+): Promise<GuideEntry> {
+  const draft = await draftFacts(draftUserContent);
+  const rewrite = await rewriteGuideVoice({ userQuestion, draft });
+  return toGuideEntry(rewrite, draft, extras);
+}
+
+export async function generateEntry(query: string): Promise<GuideEntry> {
+  return generateFromQuestion(query, FACTUAL_DRAFT_USER(query), {
+    query,
+    kind: "lookup",
+  });
 }
 
 export async function generateLocalEntry(input: {
@@ -137,27 +200,15 @@ export async function generateLocalEntry(input: {
   longitude: number;
   placeName: string;
 }): Promise<GuideEntry> {
-  const text = await createStructuredJson(
-    [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: LOCAL_ENTRY_PROMPT(
-          input.placeName,
-          input.latitude,
-          input.longitude,
-        ),
-      },
-    ],
-    "guide_entry",
-    guideEntryJsonSchema as unknown as Record<string, unknown>,
+  const question = `What should a traveller know about ${input.placeName}?`;
+  return generateFromQuestion(
+    question,
+    FACTUAL_LOCAL_USER(input.placeName, input.latitude, input.longitude),
+    {
+      query: input.placeName,
+      kind: "local",
+    },
   );
-
-  const parsed = guideEntrySchema.parse(JSON.parse(text));
-  return toGuideEntry(parsed, {
-    query: input.placeName,
-    kind: "local",
-  });
 }
 
 export async function generateIdentifyEntry(input: {
@@ -170,33 +221,24 @@ export async function generateIdentifyEntry(input: {
   }
   const mimeType = match[1] ?? "image/jpeg";
   const base64 = match[2] ?? "";
+  const question = input.question?.trim() || "What is this?";
 
-  const text = await createStructuredJson(
-    [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: [
-          { type: "input_text", text: IDENTIFY_PROMPT(input.question) },
-          {
-            type: "input_image",
-            image_url: `data:${mimeType};base64,${base64}`,
-            detail: "auto",
-          },
-        ],
-      },
-    ],
-    "guide_entry",
-    guideEntryJsonSchema as unknown as Record<string, unknown>,
-  );
+  const draft = await draftFacts([
+    { type: "input_text", text: FACTUAL_IDENTIFY_USER(input.question) },
+    {
+      type: "input_image",
+      image_url: `data:${mimeType};base64,${base64}`,
+      detail: "auto",
+    },
+  ]);
 
-  const parsed = guideEntrySchema.parse(JSON.parse(text));
-  if (parsed.confidence === null || parsed.confidence === undefined) {
-    parsed.confidence = 55;
+  if (draft.confidence === null || draft.confidence === undefined) {
+    draft.confidence = 55;
   }
 
-  return toGuideEntry(parsed, {
-    query: input.question || "Visual identification",
+  const rewrite = await rewriteGuideVoice({ userQuestion: question, draft });
+  return toGuideEntry(rewrite, draft, {
+    query: question,
     kind: "identify",
   });
 }
@@ -207,16 +249,17 @@ export async function generateFollowUp(
 ): Promise<GuideSupplement> {
   const compact = {
     title: entry.title,
-    verdict: entry.verdict,
-    body: entry.body,
-    travellerNote: entry.travellerNote,
-    caution: entry.caution,
+    opening: entry.verdict,
+    paragraphs: entry.body,
+    travellerAdvisory: entry.travellerNote ?? null,
+    caution: entry.caution ?? null,
+    editorialNote: entry.editorialNote ?? null,
     relatedEntries: entry.relatedEntries,
   };
 
   const text = await createStructuredJson(
     [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: FOLLOW_UP_SYSTEM },
       {
         role: "user",
         content: FOLLOW_UP_PROMPT(JSON.stringify(compact), question),
