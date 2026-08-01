@@ -22,14 +22,19 @@ export function InstallPrompt() {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
-    setShowIosInstructions(isIos && !isStandalone);
+    const frame = window.requestAnimationFrame(() => {
+      setShowIosInstructions(isIos && !isStandalone);
+    });
 
     const handler = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
 
   if (dismissed || (!deferred && !showIosInstructions)) return null;
