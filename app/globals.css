@@ -38,6 +38,7 @@
 html,
 body {
   min-height: 100%;
+  min-height: 100dvh;
 }
 
 body {
@@ -45,6 +46,10 @@ body {
   background: #121311;
   color: var(--screen-text);
   font-family: var(--font-guide-mono), ui-monospace, monospace;
+  /* Keep content clear of iPhone Dynamic Island / home indicator. */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  padding: 0; /* padding handled by GuideShell so background still bleeds edge-to-edge */
 }
 
 button,

@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
+    // Keep status bar readable; content still uses safe-area insets below.
     statusBarStyle: "black-translucent",
     title: "The Guide",
   },
