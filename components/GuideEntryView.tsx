@@ -100,7 +100,7 @@ export function GuideEntryView({
       {entry.travellerNote ? (
         <section className="space-y-2">
           <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
-            Traveller&apos;s note
+            Traveller&apos;s advisory
           </h2>
           <p className="text-[15px] leading-relaxed">{entry.travellerNote}</p>
         </section>
@@ -112,6 +112,15 @@ export function GuideEntryView({
             Caution
           </h2>
           <p className="text-[15px] leading-relaxed">{entry.caution}</p>
+        </section>
+      ) : null}
+
+      {entry.editorialNote ? (
+        <section className="space-y-2 border border-[color:var(--screen-muted)]/35 px-3 py-3">
+          <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
+            Editorial note
+          </h2>
+          <p className="text-[15px] leading-relaxed">{entry.editorialNote}</p>
         </section>
       ) : null}
 
