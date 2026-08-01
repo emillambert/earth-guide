@@ -79,8 +79,11 @@ export default function IndexPage() {
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
                 Edition 42.1 — Earth Field Supplement
               </p>
-              <h1 className="text-3xl font-semibold uppercase tracking-[0.08em]">
-                The Guide
+              <h1 className="text-2xl font-semibold uppercase leading-tight tracking-[0.06em]">
+                The Hitchhiker&apos;s Guide
+                <span className="block text-lg text-[color:var(--screen-muted)]">
+                  to the Galaxy
+                </span>
               </h1>
               <p className="text-sm uppercase tracking-[0.12em] text-[color:var(--screen-muted)]">
                 Look up anything

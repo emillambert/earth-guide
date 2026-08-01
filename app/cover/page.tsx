@@ -29,7 +29,7 @@ export default function CoverPage() {
   }
 
   return (
-    <GuideShell edition="Field Cover">
+    <GuideShell edition="Earth Edition">
       <button
         type="button"
         onClick={openGuide}
@@ -42,8 +42,8 @@ export default function CoverPage() {
         <div className="absolute inset-3 border border-[color:var(--screen-muted)]/35" />
         <div className="absolute inset-5 border border-[color:var(--screen-muted)]/20" />
 
-        <p className="mb-6 text-[10px] uppercase tracking-[0.28em] text-[color:var(--screen-muted)]">
-          Portable Earth Reference
+        <p className="mb-6 max-w-xs text-[11px] uppercase leading-relaxed tracking-[0.22em] text-[color:var(--screen-muted)]">
+          The Hitchhiker&apos;s Guide to the Galaxy
         </p>
         <h1 className="text-4xl font-bold tracking-[0.12em] text-[color:var(--screen-text)] sm:text-5xl">
           DON&apos;T PANIC

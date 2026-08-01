@@ -10,19 +10,20 @@ const guideMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Guide",
+  title: "The Hitchhiker’s Guide to the Galaxy",
   description:
-    "A portable electronic reference guide to Earth. Look anything up. Don't panic.",
-  applicationName: "The Guide",
+    "The Hitchhiker’s Guide to the Galaxy — practical Earth edition. Look anything up. Don’t panic.",
+  applicationName: "The Hitchhiker’s Guide to the Galaxy",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     // Keep status bar readable; content still uses safe-area insets below.
     statusBarStyle: "black-translucent",
-    title: "The Guide",
+    title: "Hitchhiker’s Guide",
   },
   icons: {
     icon: [
+      { url: "/icons/icon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
