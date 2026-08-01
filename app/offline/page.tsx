@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { PlasticButton } from "@/components/PlasticButton";
@@ -10,9 +9,9 @@ export default function OfflinePage() {
   const router = useRouter();
 
   return (
-    <GuideShell edition="Offline Supplement">
+    <GuideShell>
       <GuideScreen>
-        <div className="flex min-h-[60dvh] flex-col justify-center gap-4">
+        <div className="flex flex-1 flex-col justify-center gap-4 py-8">
           <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
             Connection unavailable
           </p>
@@ -26,12 +25,13 @@ export default function OfflinePage() {
           <PlasticButton fullWidth onClick={() => router.push("/saved")}>
             Open saved entries
           </PlasticButton>
-          <Link
-            href="/guide"
-            className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
+          <PlasticButton
+            fullWidth
+            variant="secondary"
+            onClick={() => router.push("/guide")}
           >
-            Retry index
-          </Link>
+            Open index
+          </PlasticButton>
         </div>
       </GuideScreen>
     </GuideShell>

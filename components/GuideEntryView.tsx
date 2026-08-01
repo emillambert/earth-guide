@@ -5,7 +5,7 @@ import { RelatedEntries } from "@/components/RelatedEntries";
 import { SavedEntryButton } from "@/components/SavedEntryButton";
 import { ReadAloudButton } from "@/components/ReadAloudButton";
 import { PlasticButton } from "@/components/PlasticButton";
-import { LoadingDisplay } from "@/components/LoadingDisplay";
+import { Notice } from "@/components/Notice";
 import type { GuideEntry } from "@/types/guide";
 
 type Props = {
@@ -55,12 +55,8 @@ export function GuideEntryView({
     }
   }
 
-  if (busy && !entry.body.length) {
-    return <LoadingDisplay label="Consulting index" />;
-  }
-
   return (
-    <article className="terminal-enter space-y-6 pb-6">
+    <article className="space-y-6 pb-6">
       <header className="space-y-2 border-b border-[color:var(--screen-muted)]/30 pb-4">
         <p className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--screen-muted)]">
           Guide entry
@@ -68,27 +64,21 @@ export function GuideEntryView({
         <h1 className="text-2xl font-semibold uppercase tracking-[0.04em] leading-tight">
           {entry.title}
         </h1>
-        <p className="text-sm leading-relaxed text-[color:var(--screen-text)]">
+        {entry.kind === "identify" && typeof entry.confidence === "number" ? (
+          <p className="text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)]">
+            Identification confidence: {Math.round(entry.confidence)}%
+          </p>
+        ) : null}
+        <p className="text-base leading-relaxed text-[color:var(--screen-text)]">
           {entry.verdict}
         </p>
-        {entry.kind === "identify" && typeof entry.confidence === "number" ? (
-          <div className="mt-3 space-y-1 border border-[color:var(--screen-muted)]/35 px-3 py-2">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
-              Probable identification
-            </p>
-            <p className="text-sm uppercase tracking-[0.06em]">{entry.title}</p>
-            <p className="text-xs text-[color:var(--screen-muted)]">
-              Guide confidence: {Math.round(entry.confidence)}%
-            </p>
-          </div>
-        ) : null}
       </header>
 
-      {entry.highRisk ? (
-        <p className="border border-[color:var(--warning)] bg-[color:var(--warning)]/10 px-3 py-2 text-sm leading-relaxed text-[color:var(--warning)]">
+      {entry.highRisk && !entry.caution ? (
+        <Notice>
           This entry is general information, not emergency or professional
           guidance.
-        </p>
+        </Notice>
       ) : null}
 
       <div className="space-y-3 text-[15px] leading-relaxed">
@@ -145,32 +135,36 @@ export function GuideEntryView({
       <section className="space-y-2">
         <button
           type="button"
-          className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
+          aria-expanded={sourcesOpen}
+          aria-controls="entry-sources"
+          className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
           onClick={() => setSourcesOpen((open) => !open)}
         >
           Sources {sourcesOpen ? "▴" : "▾"}
         </button>
         {sourcesOpen ? (
-          entry.sources.length ? (
-            <ul className="space-y-2 text-sm">
-              {entry.sources.map((source) => (
-                <li key={`${source.title}-${source.url}`}>
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-[color:var(--highlight)] underline-offset-2"
-                  >
-                    {source.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-[color:var(--screen-muted)]">
-              Sources not yet verified.
-            </p>
-          )
+          <div id="entry-sources">
+            {entry.sources.length ? (
+              <ul className="space-y-2 text-sm">
+                {entry.sources.map((source) => (
+                  <li key={`${source.title}-${source.url}`}>
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline decoration-[color:var(--highlight)] underline-offset-2"
+                    >
+                      {source.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[color:var(--screen-muted)]">
+                Sources not yet verified.
+              </p>
+            )}
+          </div>
         ) : null}
       </section>
 
@@ -179,24 +173,28 @@ export function GuideEntryView({
       </p>
 
       <div className="grid gap-2">
-        <SavedEntryButton entry={entry} />
-        <ReadAloudButton entry={entry} />
+        <SavedEntryButton entry={entry} disabled={busy} />
+        <ReadAloudButton entry={entry} disabled={busy} />
       </div>
 
       <form
         onSubmit={handleFollowUp}
         className="space-y-3 border-t border-[color:var(--screen-muted)]/30 pt-5"
       >
-        <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
+        <label
+          htmlFor="follow-up-question"
+          className="block text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]"
+        >
           Request clarification from the Guide
-        </h2>
+        </label>
         <textarea
+          id="follow-up-question"
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           disabled={busy}
           rows={3}
           placeholder="Do they actually eat the leaves?"
-          className="lookup-field w-full px-3 py-3 text-sm text-[color:var(--screen-text)] placeholder:text-[color:var(--screen-muted)]"
+          className="lookup-field w-full px-3 py-3 text-base text-[color:var(--screen-text)] placeholder:text-[color:var(--screen-muted)]"
         />
         <PlasticButton
           type="submit"
@@ -206,7 +204,7 @@ export function GuideEntryView({
           Ask a follow-up
         </PlasticButton>
         {error ? (
-          <p className="text-sm text-[color:var(--warning)]">{error}</p>
+          <Notice>{error}</Notice>
         ) : null}
         {busy ? (
           <p className="loading-pulse text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">

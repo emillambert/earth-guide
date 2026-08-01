@@ -27,11 +27,15 @@ export function SearchPanel({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <label className="block text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
-        Look up anything
+      <label
+        htmlFor="guide-query"
+        className="block text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]"
+      >
+        Subject or question
       </label>
       <div className="relative">
         <input
+          id="guide-query"
           ref={inputRef}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -48,7 +52,7 @@ export function SearchPanel({
         ) : null}
       </div>
       <PlasticButton type="submit" fullWidth disabled={disabled || !query.trim()}>
-        Consult the Guide
+        Consult
       </PlasticButton>
     </form>
   );

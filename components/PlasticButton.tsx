@@ -31,7 +31,7 @@ export function PlasticButton({
       type={type}
       className={[
         variantClass,
-        "min-h-12 px-4 py-3 text-left text-sm uppercase tracking-[0.08em]",
+        "inline-flex min-h-12 items-center justify-center px-4 py-3 text-center text-sm uppercase tracking-[0.08em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]",
         fullWidth ? "w-full" : "",
         className,
       ]

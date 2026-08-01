@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 const SW_VERSION_KEY = "earth-guide-sw-version";
-const SW_VERSION = "v5-branded-assets";
+const SW_VERSION = "v6-ui-cleanup";
 
 export function ServiceWorkerRegister() {
   useEffect(() => {
