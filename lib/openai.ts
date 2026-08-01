@@ -17,7 +17,7 @@ import {
   FOLLOW_UP_PROMPT,
   FOLLOW_UP_SYSTEM,
   GUIDE_DIRECT_USER,
-  GUIDE_STYLE_SYSTEM,
+  GUIDE_DISCOVERY_SYSTEM,
   GUIDE_REWRITE_USER,
 } from "@/lib/prompts";
 import type { GuideEntry, GuideSupplement } from "@/types/guide";
@@ -73,12 +73,20 @@ async function createStructuredJson(
   input: OpenAI.Responses.ResponseCreateParams["input"],
   schemaName: string,
   schema: Record<string, unknown>,
+  options?: {
+    reasoningEffort?: "high" | "xhigh";
+    verbosity?: "low" | "medium" | "high";
+  },
 ): Promise<string> {
   const client = getClient();
   const response = await client.responses.create({
     model: MODEL,
     input,
+    reasoning: options?.reasoningEffort
+      ? { effort: options.reasoningEffort }
+      : undefined,
     text: {
+      verbosity: options?.verbosity,
       format: {
         type: "json_schema",
         name: schemaName,
@@ -124,7 +132,7 @@ async function rewriteGuideVoice(input: {
 }): Promise<GuideRewrite> {
   const text = await createStructuredJson(
     [
-      { role: "system", content: GUIDE_STYLE_SYSTEM },
+      { role: "system", content: GUIDE_DISCOVERY_SYSTEM },
       {
         role: "user",
         content: GUIDE_REWRITE_USER({
@@ -137,6 +145,7 @@ async function rewriteGuideVoice(input: {
     ],
     "guide_rewrite",
     guideRewriteJsonSchema as unknown as Record<string, unknown>,
+    { reasoningEffort: "high", verbosity: "medium" },
   );
 
   return guideRewriteSchema.parse(JSON.parse(text));
@@ -145,11 +154,12 @@ async function rewriteGuideVoice(input: {
 async function writeGuideEntry(userQuestion: string): Promise<GuideRewrite> {
   const text = await createStructuredJson(
     [
-      { role: "system", content: GUIDE_STYLE_SYSTEM },
+      { role: "system", content: GUIDE_DISCOVERY_SYSTEM },
       { role: "user", content: GUIDE_DIRECT_USER(userQuestion) },
     ],
     "guide_entry",
     guideRewriteJsonSchema as unknown as Record<string, unknown>,
+    { reasoningEffort: "high", verbosity: "medium" },
   );
 
   return guideRewriteSchema.parse(JSON.parse(text));
@@ -164,10 +174,11 @@ async function writeGuideEntryStreaming(
     {
       model: MODEL,
       input: [
-        { role: "system", content: GUIDE_STYLE_SYSTEM },
+        { role: "system", content: GUIDE_DISCOVERY_SYSTEM },
         { role: "user", content: GUIDE_DIRECT_USER(userQuestion) },
       ],
       text: {
+        verbosity: "medium",
         format: {
           type: "json_schema",
           name: "guide_entry",
@@ -175,6 +186,7 @@ async function writeGuideEntryStreaming(
           schema: guideRewriteJsonSchema,
         },
       },
+      reasoning: { effort: "high" },
       stream: true,
     },
     { signal },
@@ -218,11 +230,18 @@ function toGuideEntry(
     (draft?.highRisk ? draft.safetyInformation.trim() : "") ||
     undefined;
 
+  const sections = rewrite.body
+    .trim()
+    .split(/\n\s*\n/)
+    .map((section) => section.trim())
+    .filter(Boolean);
+  const [opening = "", ...paragraphs] = sections;
+
   return {
     id: extras.id ?? randomUUID(),
     title: rewrite.title.trim() || draft?.title.trim() || "Guide Entry",
-    verdict: rewrite.opening.trim(),
-    body: rewrite.paragraphs.map((p) => p.trim()).filter(Boolean),
+    verdict: opening,
+    body: paragraphs,
     travellerNote: rewrite.travellerAdvisory?.trim() || undefined,
     caution: caution || undefined,
     editorialNote: rewrite.editorialNote?.trim() || undefined,

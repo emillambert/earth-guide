@@ -46,50 +46,52 @@ function stringField(source: string, key: string): string | undefined {
   return start === -1 ? undefined : readString(source, start);
 }
 
-function stringArrayField(source: string, key: string): string[] {
+function partialStringField(
+  source: string,
+  key: string,
+): { value: string; complete: boolean } | undefined {
   const start = valueStart(source, key);
-  if (start === -1 || source[start] !== "[") return [];
+  if (start === -1 || source[start] !== '"') return undefined;
 
-  const values: string[] = [];
-  let index = start + 1;
-  while (index < source.length) {
-    while (
-      index < source.length &&
-      (/\s/.test(source[index] ?? "") || source[index] === ",")
-    ) {
-      index += 1;
-    }
-    if (source[index] === "]" || index >= source.length) break;
-    if (source[index] !== '"') break;
+  const complete = readString(source, start);
+  if (complete !== undefined) return { value: complete, complete: true };
 
-    const value = readString(source, index);
-    if (value === undefined) break;
-    values.push(value);
-
-    let escaped = false;
-    index += 1;
-    while (index < source.length) {
-      const character = source[index];
-      if (escaped) {
-        escaped = false;
-      } else if (character === "\\") {
-        escaped = true;
-      } else if (character === '"') {
-        index += 1;
-        break;
-      }
-      index += 1;
+  const unfinished = source.slice(start);
+  for (
+    let trim = 0;
+    trim <= Math.min(8, unfinished.length - 1);
+    trim += 1
+  ) {
+    try {
+      const candidate = `${unfinished.slice(0, unfinished.length - trim)}"`;
+      return {
+        value: JSON.parse(candidate) as string,
+        complete: false,
+      };
+    } catch {
+      // A streamed escape sequence may be incomplete; trim through it.
     }
   }
 
-  return values;
+  return undefined;
 }
 
 /** Extract only fully closed fields from an incomplete structured JSON stream. */
 export function extractGuideProgress(source: string): GuideProgress {
+  const body = partialStringField(source, "body");
+  const sections = body?.value
+    .split(/\n\s*\n/)
+    .map((section) => section.trim())
+    .filter(Boolean) ?? [];
+
+  if (body && !body.complete && !/\n\s*\n$/.test(body.value)) {
+    sections.pop();
+  }
+
+  const [opening, ...paragraphs] = sections;
   return {
     title: stringField(source, "title"),
-    opening: stringField(source, "opening"),
-    paragraphs: stringArrayField(source, "paragraphs"),
+    opening,
+    paragraphs,
   };
 }
