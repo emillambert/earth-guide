@@ -14,7 +14,7 @@ export default function CoverPage() {
 
   useEffect(() => {
     if (state.skipCover && state.hasOpenedGuide) {
-      router.replace("/index");
+      router.replace("/guide");
     }
   }, [router, state.hasOpenedGuide, state.skipCover]);
 
@@ -23,7 +23,7 @@ export default function CoverPage() {
     setExiting(true);
     markGuideOpened();
     window.setTimeout(() => {
-      router.push("/index");
+      router.push("/guide");
     }, 400);
   }
 

@@ -2,7 +2,7 @@ const CACHE_NAME = "earth-guide-shell-v1";
 const SHELL_ASSETS = [
   "/",
   "/cover",
-  "/index",
+  "/guide",
   "/saved",
   "/identify",
   "/manifest.webmanifest",

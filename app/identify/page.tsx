@@ -69,7 +69,7 @@ export default function IdentifyPage() {
           <form onSubmit={handleSubmit} className="terminal-enter space-y-5 pb-4">
             <div className="flex items-center justify-between gap-3">
               <Link
-                href="/index"
+                href="/guide"
                 className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
               >
                 ← Index

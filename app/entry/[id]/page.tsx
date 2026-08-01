@@ -65,7 +65,7 @@ function EntryContent({ id }: { id: string }) {
         <p className="text-sm leading-relaxed">
           This entry is no longer held in local memory.
         </p>
-        <PlasticButton fullWidth onClick={() => router.push("/index")}>
+        <PlasticButton fullWidth onClick={() => router.push("/guide")}>
           Return to index
         </PlasticButton>
       </div>
@@ -91,7 +91,7 @@ export default function EntryPage() {
       <GuideScreen>
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link
-            href="/index"
+            href="/guide"
             className="text-[10px] uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-2 hover:underline"
           >
             ← Index
