@@ -94,13 +94,13 @@ export default function IndexPage() {
           <div className="terminal-enter space-y-6 pb-4">
             <header className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
-                Main index
+                Edition 42.1 — Earth Field Supplement
               </p>
               <h1 className="text-3xl font-semibold uppercase tracking-[0.08em]">
                 The Guide
               </h1>
-              <p className="text-sm text-[color:var(--screen-muted)]">
-                A field reference for Earth. Subjects and questions accepted.
+              <p className="text-sm uppercase tracking-[0.12em] text-[color:var(--screen-muted)]">
+                Look up anything
               </p>
             </header>
 
@@ -110,11 +110,13 @@ export default function IndexPage() {
               <PlasticButton fullWidth onClick={() => void localEntry()}>
                 Local entry
               </PlasticButton>
-              <Link href="/identify" className="block">
-                <PlasticButton fullWidth variant="secondary" className="w-full">
-                  Identify
-                </PlasticButton>
-              </Link>
+              <PlasticButton
+                fullWidth
+                variant="secondary"
+                onClick={() => router.push("/identify")}
+              >
+                Identify
+              </PlasticButton>
               <PlasticButton
                 fullWidth
                 variant="secondary"

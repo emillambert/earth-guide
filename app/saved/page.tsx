@@ -45,13 +45,13 @@ export default function SavedPage() {
 
           <header className="space-y-2">
             <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
-              Personal copy
+              Local archive
             </p>
             <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
-              Saved entries
+              Personal copy of the Guide
             </h1>
             <p className="text-sm text-[color:var(--screen-muted)]">
-              Kept on this device. No accounts. No syncing.
+              Saved entries kept on this device. No accounts. No syncing.
             </p>
           </header>
 

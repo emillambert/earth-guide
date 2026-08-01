@@ -71,7 +71,7 @@ export function GuideEntryView({
         <p className="text-sm leading-relaxed text-[color:var(--screen-text)]">
           {entry.verdict}
         </p>
-        {typeof entry.confidence === "number" ? (
+        {entry.kind === "identify" && typeof entry.confidence === "number" ? (
           <div className="mt-3 space-y-1 border border-[color:var(--screen-muted)]/35 px-3 py-2">
             <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
               Probable identification
@@ -174,7 +174,10 @@ export function GuideEntryView({
         <ReadAloudButton entry={entry} />
       </div>
 
-      <form onSubmit={handleFollowUp} className="space-y-3 border-t border-[color:var(--screen-muted)]/30 pt-5">
+      <form
+        onSubmit={handleFollowUp}
+        className="space-y-3 border-t border-[color:var(--screen-muted)]/30 pt-5"
+      >
         <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
           Request clarification from the Guide
         </h2>
@@ -186,13 +189,21 @@ export function GuideEntryView({
           placeholder="Do they actually eat the leaves?"
           className="lookup-field w-full px-3 py-3 text-sm text-[color:var(--screen-text)] placeholder:text-[color:var(--screen-muted)]"
         />
-        <PlasticButton type="submit" fullWidth disabled={busy || !question.trim()}>
+        <PlasticButton
+          type="submit"
+          fullWidth
+          disabled={busy || !question.trim()}
+        >
           Ask a follow-up
         </PlasticButton>
         {error ? (
           <p className="text-sm text-[color:var(--warning)]">{error}</p>
         ) : null}
-        {busy ? <LoadingDisplay label="Amending entry" /> : null}
+        {busy ? (
+          <p className="loading-pulse text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">
+            Amending entry…
+          </p>
+        ) : null}
       </form>
     </article>
   );

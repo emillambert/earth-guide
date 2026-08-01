@@ -1,8 +1,36 @@
-const CACHE_NAME = "earth-guide-shell-v2";
+const CACHE_NAME = "earth-guide-shell-v3";
+const SHELL_ASSETS = [
+  "/",
+  "/cover",
+  "/guide",
+  "/saved",
+  "/identify",
+  "/offline",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE_NAME));
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then(async (cache) => {
+        await Promise.all(
+          SHELL_ASSETS.map(async (path) => {
+            try {
+              const response = await fetch(path, { cache: "reload" });
+              if (response.ok && !response.redirected) {
+                await cache.put(path, response);
+              }
+            } catch {
+              // Best-effort precache.
+            }
+          }),
+        );
+      })
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -28,7 +56,6 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
-  // Network-first. Never cache redirects or error documents.
   event.respondWith(
     fetch(request)
       .then((response) => {
@@ -46,7 +73,11 @@ self.addEventListener("fetch", (event) => {
       .catch(async () => {
         const cached = await caches.match(request);
         if (cached) return cached;
-        return new Response("Offline", {
+        if (request.mode === "navigate") {
+          const offline = await caches.match("/offline");
+          if (offline) return offline;
+        }
+        return new Response("The Guide is offline.", {
           status: 503,
           headers: { "Content-Type": "text/plain" },
         });
