@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { PlasticButton } from "@/components/PlasticButton";
-import { removeSavedEntry } from "@/lib/storage";
+import { clearGuideCopies, removeSavedEntry } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
 
 export default function SavedPage() {
@@ -61,6 +61,25 @@ export default function SavedPage() {
             placeholder="Search saved entries"
             className="lookup-field w-full min-h-12 px-3 py-3 text-sm"
           />
+
+          {(state.savedEntries.length > 0 || state.recentEntries.length > 0) && (
+            <PlasticButton
+              fullWidth
+              variant="warning"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Clear all saved and recently consulted entries on this device?",
+                  )
+                ) {
+                  clearGuideCopies();
+                  setQuery("");
+                }
+              }}
+            >
+              Clear all local entries
+            </PlasticButton>
+          )}
 
           {filtered.length ? (
             <ul className="space-y-3">

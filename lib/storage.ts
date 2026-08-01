@@ -1,6 +1,7 @@
 import type { AppState, GuideEntry, SavedGuideEntry } from "@/types/guide";
 
-const STORAGE_KEY = "earth-guide-v1";
+// Bump this to wipe local saved/recent caches after major voice changes.
+const STORAGE_KEY = "earth-guide-v3-adams";
 const MAX_RECENT = 20;
 export const STORAGE_EVENT = "earth-guide-storage";
 
@@ -165,4 +166,14 @@ export function removeSavedEntry(id: string): AppState {
 
 export function isEntrySaved(id: string): boolean {
   return loadState().savedEntries.some((entry) => entry.id === id);
+}
+
+/** Wipe saved/recent/cache while keeping cover/sound preferences. */
+export function clearGuideCopies(): AppState {
+  return updateState((prev) => ({
+    ...prev,
+    recentEntries: [],
+    savedEntries: [],
+    entryCache: {},
+  }));
 }

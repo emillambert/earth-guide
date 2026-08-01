@@ -17,8 +17,8 @@ import {
 } from "@/lib/prompts";
 import type { GuideEntry, GuideSupplement } from "@/types/guide";
 
-// GPT-5.6 Luna via OpenAI Responses API. Override with OPENAI_MODEL if needed.
-const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.6-luna";
+// Sol for literary/comic quality; override with OPENAI_MODEL if needed.
+const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.6-sol";
 
 function getClient() {
   const apiKey = process.env.OPENAI_API_KEY;
