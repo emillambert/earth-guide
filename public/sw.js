@@ -1,4 +1,5 @@
-const CACHE_NAME = "hitchhikers-guide-shell-v6";
+const CACHE_NAME = "hitchhikers-guide-shell-v8";
+const CACHE_PREFIX = "hitchhikers-guide-shell-";
 const SHELL_ASSETS = [
   "/",
   "/cover",
@@ -10,6 +11,52 @@ const SHELL_ASSETS = [
   "/icons/hitchhikers-icon-192.png",
   "/icons/hitchhikers-icon-512.png",
 ];
+const CORE_SHELL_ASSETS = ["/guide", "/saved", "/offline"];
+const STATIC_PREFIXES = ["/_next/static/", "/icons/"];
+
+async function cacheResponse(cache, request, response) {
+  if (
+    response.ok &&
+    response.type === "basic" &&
+    !response.redirected &&
+    response.status === 200
+  ) {
+    await cache.put(request, response.clone());
+  }
+}
+
+async function cachePageAndAssets(cache, path, strictAssets = false) {
+  const response = await fetch(path, { cache: "reload" });
+  if (!response.ok || response.redirected) {
+    throw new Error(`Could not cache ${String(path)}`);
+  }
+  await cacheResponse(cache, path, response);
+
+  if (!response.headers.get("Content-Type")?.includes("text/html")) return;
+  const html = await response.text();
+  const assetUrls = new Set();
+  const assetPattern = /(?:src|href)="([^"]*\/_next\/static\/[^"]+)"/g;
+  for (const match of html.matchAll(assetPattern)) {
+    if (match[1]) {
+      assetUrls.add(new URL(match[1], self.location.origin).href);
+    }
+  }
+  await Promise.all(
+    Array.from(assetUrls).map(async (url) => {
+      try {
+        const request = new Request(url, { cache: "reload" });
+        const assetResponse = await fetch(request);
+        if (!assetResponse.ok || assetResponse.redirected) {
+          throw new Error(`Could not cache ${url}`);
+        }
+        await cacheResponse(cache, request, assetResponse);
+      } catch (error) {
+        if (strictAssets) throw error;
+        // A later online visit can fill this asset.
+      }
+    }),
+  );
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -17,12 +64,16 @@ self.addEventListener("install", (event) => {
       .open(CACHE_NAME)
       .then(async (cache) => {
         await Promise.all(
-          SHELL_ASSETS.map(async (path) => {
+          CORE_SHELL_ASSETS.map((path) =>
+            cachePageAndAssets(cache, path, true),
+          ),
+        );
+        await Promise.all(
+          SHELL_ASSETS.filter(
+            (path) => !CORE_SHELL_ASSETS.includes(path),
+          ).map(async (path) => {
             try {
-              const response = await fetch(path, { cache: "reload" });
-              if (response.ok && !response.redirected) {
-                await cache.put(path, response);
-              }
+              await cachePageAndAssets(cache, path);
             } catch {
               // Best-effort precache.
             }
@@ -40,12 +91,68 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            .filter(
+              (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
+            )
             .map((key) => caches.delete(key)),
         ),
       )
       .then(() => self.clients.claim()),
   );
+});
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || typeof data !== "object") return;
+
+  if (data.type === "CACHE_RESOURCES" && Array.isArray(data.urls)) {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        await Promise.all(
+          data.urls.map(async (value) => {
+            try {
+              const url = new URL(value, self.location.origin);
+              if (
+                url.origin !== self.location.origin ||
+                !STATIC_PREFIXES.some((prefix) =>
+                  url.pathname.startsWith(prefix),
+                )
+              ) {
+                return;
+              }
+              const request = new Request(url.href, { cache: "reload" });
+              if (await cache.match(request, { ignoreVary: true })) return;
+              const response = await fetch(request);
+              await cacheResponse(cache, request, response);
+            } catch {
+              // Individual resources are best-effort.
+            }
+          }),
+        );
+      }),
+    );
+  }
+
+  if (
+    data.type === "CACHE_ENTRY_ROUTE" &&
+    typeof data.path === "string" &&
+    /^\/entry\/[^/]+$/.test(data.path)
+  ) {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        try {
+          if (await cache.match(data.path, { ignoreVary: true })) return;
+          const request = new Request(data.path, {
+            cache: "reload",
+            headers: { Accept: "text/html" },
+          });
+          await cachePageAndAssets(cache, request);
+        } catch {
+          // The route can be warmed on the next online visit.
+        }
+      }),
+    );
+  }
 });
 
 self.addEventListener("fetch", (event) => {
@@ -56,22 +163,45 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
+  if (STATIC_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
+    const responsePromise = caches
+      .match(request, { ignoreVary: true })
+      .then((cached) => cached || fetch(request));
+    event.waitUntil(
+      responsePromise
+        .then((response) =>
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cacheResponse(cache, request, response)),
+        )
+        .catch(() => {
+          // A cache write must not break a valid response.
+        }),
+    );
+    event.respondWith(responsePromise);
+    return;
+  }
+
+  const networkResponse = fetch(request);
+  event.waitUntil(
+    networkResponse
+      .then((response) =>
+        caches
+          .open(CACHE_NAME)
+          .then((cache) => cacheResponse(cache, request, response)),
+      )
+      .catch(() => {
+        // A cache write must not break a valid network response.
+      }),
+  );
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (
-          response.ok &&
-          response.type === "basic" &&
-          !response.redirected &&
-          response.status === 200
-        ) {
-          const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      })
+    networkResponse
       .catch(async () => {
-        const cached = await caches.match(request);
+        const cached =
+          (await caches.match(request)) ||
+          (request.mode === "navigate"
+            ? await caches.match(url.pathname, { ignoreVary: true })
+            : undefined);
         if (cached) return cached;
         if (request.mode === "navigate") {
           const offline = await caches.match("/offline");

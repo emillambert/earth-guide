@@ -67,6 +67,27 @@ button:disabled {
   color: var(--screen-text);
 }
 
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  background: var(--screen);
+  border: 2px solid var(--highlight);
+  color: var(--screen-text);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+[data-page-heading]:focus {
+  outline: none;
+}
+
 .guide-shell {
   background:
     radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.04), transparent 28%),
@@ -213,6 +234,19 @@ button:disabled {
   animation: terminal-fade 320ms ease-out both;
 }
 
+@keyframes entry-resolve {
+  from {
+    opacity: 0.92;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.entry-resolved {
+  animation: entry-resolve 160ms ease-out both;
+}
+
 @keyframes pulse-line {
   0%,
   100% {
@@ -227,12 +261,44 @@ button:disabled {
   animation: pulse-line 1.2s ease-in-out infinite;
 }
 
+@keyframes guide-progress {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+.guide-progress-indeterminate {
+  width: 32%;
+  animation: guide-progress 1.15s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cover-exit,
+  .entry-resolved,
   .terminal-enter,
   .cursor-blink::after,
+  .guide-progress-indeterminate,
   .loading-pulse,
   .animate-pulse {
     animation: none !important;
+  }
+
+  .plastic-button,
+  .plastic-button-secondary {
+    transition: none !important;
+  }
+
+  .plastic-button:active,
+  .plastic-button-secondary:active {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .guide-scanlines {
+    opacity: 0.15;
   }
 }

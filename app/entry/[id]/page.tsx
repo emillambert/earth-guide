@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { GuideEntryView } from "@/components/GuideEntryView";
+import { DocumentTitle } from "@/components/DocumentTitle";
 import { ProgressiveGuideEntry } from "@/components/ProgressiveGuideEntry";
 import { PlasticButton } from "@/components/PlasticButton";
-import { LoadingDisplay } from "@/components/LoadingDisplay";
 import { Notice } from "@/components/Notice";
 import { PageNav } from "@/components/PageNav";
 import { fetchFollowUp } from "@/lib/apiClient";
@@ -58,7 +58,7 @@ function EntryContent({ id }: { id: string }) {
   }
 
   if (!isClient) {
-    return <LoadingDisplay label="Recalling entry" />;
+    return null;
   }
 
   if (!entry && pending?.status === "generating") {
@@ -72,7 +72,11 @@ function EntryContent({ id }: { id: string }) {
           <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
             Transmission interrupted
           </p>
-          <h1 className="text-xl font-semibold uppercase tracking-[0.04em]">
+          <h1
+            data-page-heading
+            tabIndex={-1}
+            className="text-xl font-semibold uppercase tracking-[0.04em]"
+          >
             {pending.progress.title ?? pending.query}
           </h1>
           <Notice>{pending.error}</Notice>
@@ -86,21 +90,49 @@ function EntryContent({ id }: { id: string }) {
 
   if (!entry) {
     return (
-      <div className="py-8">
+      <div className="terminal-enter space-y-5 py-8">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
+            Entry unavailable
+          </p>
+          <h1
+            data-page-heading
+            tabIndex={-1}
+            className="text-xl font-semibold uppercase tracking-[0.04em]"
+          >
+            Local memory has moved on
+          </h1>
+        </div>
         <Notice tone="muted" role="status">
-          This entry is no longer held in local memory.
+          This entry is no longer held on this device. It may have been cleared
+          or belong to another installation of the Guide.
         </Notice>
+        <div className="grid gap-2">
+          <PlasticButton fullWidth onClick={() => router.push("/guide")}>
+            Return to index
+          </PlasticButton>
+          <PlasticButton
+            fullWidth
+            variant="secondary"
+            onClick={() => router.push("/saved")}
+          >
+            Open saved entries
+          </PlasticButton>
+        </div>
       </div>
     );
   }
 
   return (
-    <GuideEntryView
-      entry={entry}
-      busy={followUpBusy}
-      onRelated={consultRelated}
-      onFollowUp={handleFollowUp}
-    />
+    <>
+      <DocumentTitle title={entry.title} />
+      <GuideEntryView
+        entry={entry}
+        busy={followUpBusy}
+        onRelated={consultRelated}
+        onFollowUp={handleFollowUp}
+      />
+    </>
   );
 }
 
@@ -110,7 +142,7 @@ export default function EntryPage() {
 
   return (
     <GuideShell>
-      <GuideScreen>
+      <GuideScreen resetKey={id}>
         <PageNav saved />
 
         {id ? <EntryContent key={id} id={id} /> : null}

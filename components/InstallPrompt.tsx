@@ -8,6 +8,8 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const INSTALL_DISMISSED_KEY = "hitchhikers-guide-install-dismissed";
+
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null,
@@ -23,6 +25,14 @@ export function InstallPrompt() {
       window.matchMedia("(display-mode: standalone)").matches ||
       Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
     const frame = window.requestAnimationFrame(() => {
+      try {
+        setDismissed(
+          isStandalone ||
+            window.localStorage.getItem(INSTALL_DISMISSED_KEY) === "true",
+        );
+      } catch {
+        setDismissed(isStandalone);
+      }
       setShowIosInstructions(isIos && !isStandalone);
     });
 
@@ -39,6 +49,15 @@ export function InstallPrompt() {
 
   if (dismissed || (!deferred && !showIosInstructions)) return null;
 
+  const dismiss = () => {
+    setDismissed(true);
+    try {
+      window.localStorage.setItem(INSTALL_DISMISSED_KEY, "true");
+    } catch {
+      // Dismissal still applies for this session.
+    }
+  };
+
   return (
     <div className="space-y-2 border border-[color:var(--screen-muted)]/35 px-3 py-3">
       <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)]">
@@ -54,13 +73,15 @@ export function InstallPrompt() {
           <PlasticButton
             onClick={async () => {
               await deferred.prompt();
+              const choice = await deferred.userChoice;
               setDeferred(null);
+              if (choice.outcome === "accepted") dismiss();
             }}
           >
             Install
           </PlasticButton>
         ) : null}
-        <PlasticButton variant="secondary" onClick={() => setDismissed(true)}>
+        <PlasticButton variant="secondary" onClick={dismiss}>
           {deferred ? "Later" : "Got it"}
         </PlasticButton>
       </div>

@@ -1,17 +1,11 @@
 "use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { SearchPanel } from "@/components/SearchPanel";
 import { PlasticButton } from "@/components/PlasticButton";
-import { LoadingDisplay } from "@/components/LoadingDisplay";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { Notice } from "@/components/Notice";
-import { fetchLocalEntry } from "@/lib/apiClient";
-import { requestCoordinates, reverseGeocode } from "@/lib/location";
 import { cacheEntry, setSoundEnabled } from "@/lib/storage";
 import { beginEntryGeneration } from "@/lib/pendingEntries";
 import { useAppState } from "@/lib/useAppState";
@@ -20,8 +14,6 @@ import type { GuideEntry } from "@/types/guide";
 export default function IndexPage() {
   const router = useRouter();
   const state = useAppState();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function openEntry(entry: GuideEntry) {
     cacheEntry(entry);
@@ -38,35 +30,24 @@ export default function IndexPage() {
     router.push(`/entry/${id}`);
   }
 
-  async function localEntry() {
-    setLoading(true);
-    setError(null);
-    try {
-      const coords = await requestCoordinates();
-      const placeName = await reverseGeocode(coords.latitude, coords.longitude);
-      const entry = await fetchLocalEntry({
-        ...coords,
-        placeName,
-      });
-      openEntry(entry);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Local entry failed.");
-      setLoading(false);
-    }
+  function localEntry() {
+    const id = beginEntryGeneration({ local: true });
+    router.push(`/entry/${id}`);
   }
 
   return (
     <GuideShell>
       <GuideScreen>
-        {loading ? (
-          <LoadingDisplay label="Consulting index" />
-        ) : (
-          <div className="terminal-enter space-y-7 pb-4">
+        <div className="terminal-enter space-y-7 pb-4">
             <header className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
                 Current supplement
               </p>
-              <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+              <h1
+                data-page-heading
+                tabIndex={-1}
+                className="text-2xl font-semibold uppercase tracking-[0.06em]"
+              >
                 Earth index
               </h1>
               <p className="text-sm leading-relaxed text-[color:var(--screen-muted)]">
@@ -74,17 +55,17 @@ export default function IndexPage() {
               </p>
             </header>
 
-            <SearchPanel onSubmit={consult} disabled={loading} />
+            <SearchPanel onSubmit={consult} />
 
             <section className="space-y-2">
               <h2 className="text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)]">
                 Field tools
               </h2>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-3">
               <PlasticButton
                 variant="secondary"
                 className="px-2 text-xs"
-                onClick={() => void localEntry()}
+                onClick={localEntry}
               >
                 Nearby
               </PlasticButton>
@@ -97,13 +78,15 @@ export default function IndexPage() {
               </PlasticButton>
               <PlasticButton
                 variant="secondary"
-                className="px-2 text-xs"
+                className="col-span-2 px-2 text-xs min-[360px]:col-span-1"
                 onClick={surprise}
               >
                 Surprise
               </PlasticButton>
               </div>
             </section>
+
+            <InstallPrompt />
 
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-3">
@@ -112,7 +95,7 @@ export default function IndexPage() {
                 </h2>
                 <Link
                   href="/saved"
-                  className="inline-flex min-h-11 items-center px-2 text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center px-2 text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                 >
                   Saved →
                 </Link>
@@ -138,10 +121,6 @@ export default function IndexPage() {
               )}
             </section>
 
-            {error ? (
-              <Notice>{error}</Notice>
-            ) : null}
-
             <details className="border-t border-[color:var(--screen-muted)]/25 pt-3">
               <summary className="flex min-h-11 cursor-pointer items-center text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">
                 Terminal settings
@@ -158,17 +137,15 @@ export default function IndexPage() {
                   />
                   <span>Button click sounds</span>
                 </label>
-                <InstallPrompt />
                 <Link
                   href="/cover"
-                  className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                 >
                   View cover
                 </Link>
               </div>
             </details>
-          </div>
-        )}
+        </div>
       </GuideScreen>
     </GuideShell>
   );

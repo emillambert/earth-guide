@@ -1,10 +1,8 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 
-type Props = {
+type Props = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   children: ReactNode;
   tone?: "warning" | "muted";
-  role?: "alert" | "status";
-  className?: string;
 };
 
 export function Notice({
@@ -12,10 +10,12 @@ export function Notice({
   tone = "warning",
   role = "alert",
   className = "",
+  ...rest
 }: Props) {
   return (
     <div
       role={role}
+      {...rest}
       className={[
         "border px-3 py-3 text-sm leading-relaxed",
         tone === "warning"

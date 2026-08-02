@@ -76,12 +76,20 @@ export default function IdentifyPage() {
         {loading ? (
           <LoadingDisplay label="Inspecting image" />
         ) : (
-          <form onSubmit={handleSubmit} className="terminal-enter space-y-5 pb-4">
+          <form
+            onSubmit={handleSubmit}
+            aria-describedby={error ? "identify-error" : undefined}
+            className="terminal-enter space-y-5 pb-4"
+          >
             <header className="space-y-2">
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
                 Visual consultation
               </p>
-              <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+              <h1
+                data-page-heading
+                tabIndex={-1}
+                className="text-2xl font-semibold uppercase tracking-[0.06em]"
+              >
                 Identify
               </h1>
               <p className="text-sm text-[color:var(--screen-muted)]">
@@ -150,7 +158,7 @@ export default function IdentifyPage() {
                 <img
                   src={preview}
                   alt="Selected for identification"
-                  className="max-h-64 w-full border border-[color:var(--screen-muted)]/40 object-cover"
+                  className="h-64 w-full border border-[color:var(--screen-muted)]/40 bg-[color:var(--screen-deep)]/45 object-contain"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <PlasticButton
@@ -206,7 +214,7 @@ export default function IdentifyPage() {
             </PlasticButton>
 
             {error ? (
-              <Notice>{error}</Notice>
+              <Notice id="identify-error">{error}</Notice>
             ) : null}
           </form>
         )}

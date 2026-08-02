@@ -11,11 +11,28 @@ export async function POST(request: Request) {
       surprise?: boolean;
       stream?: boolean;
       entryId?: string;
+      local?: {
+        latitude?: number;
+        longitude?: number;
+        placeName?: string;
+      };
     };
 
-    const query = body.surprise
-      ? pickRandomTopic()
-      : body.query?.trim();
+    const local =
+      typeof body.local?.latitude === "number" &&
+      typeof body.local.longitude === "number" &&
+      body.local.placeName?.trim()
+        ? {
+            latitude: body.local.latitude,
+            longitude: body.local.longitude,
+            placeName: body.local.placeName.trim(),
+          }
+        : null;
+    const query = local
+      ? `What should a traveller know about ${local.placeName}? The supplied coordinates are ${local.latitude}, ${local.longitude}.`
+      : body.surprise
+        ? pickRandomTopic()
+        : body.query?.trim();
 
     if (!query) {
       return NextResponse.json(
@@ -41,7 +58,12 @@ export async function POST(request: Request) {
               (delta) => send({ type: "delta", delta }),
               {
                 id: body.entryId?.trim() || undefined,
-                kind: body.surprise ? "surprise" : "lookup",
+                kind: local
+                  ? "local"
+                  : body.surprise
+                    ? "surprise"
+                    : "lookup",
+                query: local?.placeName ?? query,
               },
               request.signal,
             );

@@ -1,34 +1,84 @@
 "use client";
 
 import { useEffect } from "react";
-
-const SW_VERSION_KEY = "earth-guide-sw-version";
-const SW_VERSION = "v6-ui-cleanup";
+import { usePathname } from "next/navigation";
+import { loadState } from "@/lib/storage";
 
 export function ServiceWorkerRegister() {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    const previous = window.localStorage.getItem(SW_VERSION_KEY);
     const bootstrap = async () => {
-      // One-time cleanup after earlier broken SW builds.
-      if (previous !== SW_VERSION) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((reg) => reg.unregister()));
-        if ("caches" in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map((key) => caches.delete(key)));
-        }
-        window.localStorage.setItem(SW_VERSION_KEY, SW_VERSION);
-      }
-
-      await navigator.serviceWorker.register("/sw.js");
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await registration.update();
     };
 
     void bootstrap().catch(() => {
       // Offline shell is best-effort.
     });
   }, []);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const prewarm = async () => {
+      const registration = await navigator.serviceWorker.ready;
+      const worker = registration.active;
+      if (!worker) return;
+
+      const resourceUrls = performance
+        .getEntriesByType("resource")
+        .map((entry) => entry.name)
+        .filter((value) => {
+          try {
+            const url = new URL(value);
+            return (
+              url.origin === window.location.origin &&
+              (url.pathname.startsWith("/_next/static/") ||
+                url.pathname.startsWith("/icons/"))
+            );
+          } catch {
+            return false;
+          }
+        });
+
+      worker.postMessage({
+        type: "CACHE_RESOURCES",
+        urls: Array.from(new Set(resourceUrls)),
+      });
+
+      for (const entry of loadState().savedEntries) {
+        worker.postMessage({
+          type: "CACHE_ENTRY_ROUTE",
+          path: `/entry/${encodeURIComponent(entry.id)}`,
+        });
+      }
+    };
+
+    const timer = window.setTimeout(() => {
+      void prewarm().catch(() => {
+        // Offline support remains best-effort.
+      });
+    }, 250);
+    const handleControllerChange = () => {
+      void prewarm().catch(() => {
+        // A later route change will retry.
+      });
+    };
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      handleControllerChange,
+    );
+    return () => {
+      window.clearTimeout(timer);
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        handleControllerChange,
+      );
+    };
+  }, [pathname]);
 
   return null;
 }

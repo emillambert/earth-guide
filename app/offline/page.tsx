@@ -11,16 +11,21 @@ export default function OfflinePage() {
   return (
     <GuideShell>
       <GuideScreen>
-        <div className="flex flex-1 flex-col justify-center gap-4 py-8">
+        <div className="terminal-enter flex flex-1 flex-col justify-center gap-4 py-8">
           <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
             Connection unavailable
           </p>
-          <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+          <h1
+            data-page-heading
+            tabIndex={-1}
+            className="text-2xl font-semibold uppercase tracking-[0.06em]"
+          >
             Index temporarily unreachable
           </h1>
           <p className="text-sm leading-relaxed text-[color:var(--screen-muted)]">
-            Saved entries remain available on this device. New consultations
-            require a connection to Earth&apos;s current supplement.
+            Entries saved during an online visit remain available on this
+            device. New consultations and uncached pages require a connection
+            to Earth&apos;s current supplement.
           </p>
           <PlasticButton fullWidth onClick={() => router.push("/saved")}>
             Open saved entries
