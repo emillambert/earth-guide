@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { EDITORIAL_STATUS_LINES } from "@/lib/prompts";
 import { STORAGE_ERROR_EVENT } from "@/lib/storage";
 
 type Props = {
@@ -15,6 +16,7 @@ export function GuideShell({
   edition = "Earth Edition 42.1",
 }: Props) {
   const [storageError, setStorageError] = useState("");
+  const [statusIndex, setStatusIndex] = useState(1);
 
   useEffect(() => {
     const handleStorageError = (event: Event) => {
@@ -27,6 +29,16 @@ export function GuideShell({
     window.addEventListener(STORAGE_ERROR_EVENT, handleStorageError);
     return () =>
       window.removeEventListener(STORAGE_ERROR_EVENT, handleStorageError);
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => {
+      setStatusIndex(
+        (current) => (current + 1) % EDITORIAL_STATUS_LINES.length,
+      );
+    }, 12000);
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
@@ -76,11 +88,9 @@ export function GuideShell({
           </div>
         </div>
 
-        {footer ? (
-          <div className="relative z-10 px-5 pb-4 text-[10px] uppercase tracking-[0.18em] text-[#7f8274]">
-            {footer}
-          </div>
-        ) : null}
+        <div className="relative z-10 px-5 pb-4 text-[10px] uppercase tracking-[0.18em] text-[#9a9b8f]">
+          {footer ?? EDITORIAL_STATUS_LINES[statusIndex]}
+        </div>
       </div>
     </div>
   );

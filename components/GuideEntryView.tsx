@@ -187,9 +187,11 @@ export function GuideEntryView({
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline decoration-[color:var(--highlight)] underline-offset-2"
+                      className="inline-flex min-h-11 items-center gap-1 underline decoration-[color:var(--highlight)] underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                     >
                       {source.title}
+                      <span aria-hidden="true">↗</span>
+                      <span className="sr-only"> (opens externally)</span>
                     </a>
                   </li>
                 ))}

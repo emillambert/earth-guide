@@ -240,11 +240,26 @@ button:disabled {
   animation: pulse-line 1.2s ease-in-out infinite;
 }
 
+@keyframes guide-progress {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+.guide-progress-indeterminate {
+  width: 32%;
+  animation: guide-progress 1.15s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cover-exit,
   .entry-resolved,
   .terminal-enter,
   .cursor-blink::after,
+  .guide-progress-indeterminate,
   .loading-pulse,
   .animate-pulse {
     animation: none !important;

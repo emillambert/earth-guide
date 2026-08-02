@@ -150,7 +150,7 @@ export default function IdentifyPage() {
                 <img
                   src={preview}
                   alt="Selected for identification"
-                  className="max-h-64 w-full border border-[color:var(--screen-muted)]/40 object-cover"
+                  className="h-64 w-full border border-[color:var(--screen-muted)]/40 bg-[color:var(--screen-deep)]/45 object-contain"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <PlasticButton

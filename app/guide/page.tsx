@@ -82,6 +82,8 @@ export default function IndexPage() {
               </div>
             </section>
 
+            <InstallPrompt />
+
             <section className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
@@ -131,7 +133,6 @@ export default function IndexPage() {
                   />
                   <span>Button click sounds</span>
                 </label>
-                <InstallPrompt />
                 <Link
                   href="/cover"
                   className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
