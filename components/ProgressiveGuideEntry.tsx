@@ -34,7 +34,7 @@ export function ProgressiveGuideEntry({ pending }: { pending: PendingEntry }) {
           {progress.title ?? pending.query}
         </h1>
         {progress.opening ? (
-          <p className="terminal-enter text-sm leading-relaxed text-[color:var(--screen-text)]">
+          <p className="terminal-enter text-base leading-relaxed text-[color:var(--screen-text)]">
             {progress.opening}
           </p>
         ) : (
