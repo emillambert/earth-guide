@@ -7,7 +7,6 @@ import { GuideScreen } from "@/components/GuideScreen";
 import { GuideEntryView } from "@/components/GuideEntryView";
 import { ProgressiveGuideEntry } from "@/components/ProgressiveGuideEntry";
 import { PlasticButton } from "@/components/PlasticButton";
-import { LoadingDisplay } from "@/components/LoadingDisplay";
 import { Notice } from "@/components/Notice";
 import { PageNav } from "@/components/PageNav";
 import { fetchFollowUp } from "@/lib/apiClient";
@@ -58,7 +57,7 @@ function EntryContent({ id }: { id: string }) {
   }
 
   if (!isClient) {
-    return <LoadingDisplay label="Recalling entry" />;
+    return null;
   }
 
   if (!entry && pending?.status === "generating") {
@@ -72,7 +71,11 @@ function EntryContent({ id }: { id: string }) {
           <p className="text-[10px] uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
             Transmission interrupted
           </p>
-          <h1 className="text-xl font-semibold uppercase tracking-[0.04em]">
+          <h1
+            data-page-heading
+            tabIndex={-1}
+            className="text-xl font-semibold uppercase tracking-[0.04em]"
+          >
             {pending.progress.title ?? pending.query}
           </h1>
           <Notice>{pending.error}</Notice>
@@ -110,7 +113,7 @@ export default function EntryPage() {
 
   return (
     <GuideShell>
-      <GuideScreen>
+      <GuideScreen resetKey={id}>
         <PageNav saved />
 
         {id ? <EntryContent key={id} id={id} /> : null}

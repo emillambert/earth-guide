@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { RelatedEntries } from "@/components/RelatedEntries";
 import { SavedEntryButton } from "@/components/SavedEntryButton";
 import { ReadAloudButton } from "@/components/ReadAloudButton";
@@ -24,6 +30,28 @@ export function GuideEntryView({
   const [question, setQuestion] = useState("");
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [followUpStatus, setFollowUpStatus] = useState("");
+  const supplementCount = entry.supplements?.length ?? 0;
+  const previousSupplementCount = useRef(supplementCount);
+  const latestSupplementRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (supplementCount > previousSupplementCount.current) {
+      setFollowUpStatus("Supplement added.");
+      const frame = window.requestAnimationFrame(() => {
+        latestSupplementRef.current?.focus({ preventScroll: true });
+        latestSupplementRef.current?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      });
+      previousSupplementCount.current = supplementCount;
+      return () => window.cancelAnimationFrame(frame);
+    }
+    previousSupplementCount.current = supplementCount;
+  }, [supplementCount]);
 
   const updatedLabel = useMemo(() => {
     try {
@@ -47,6 +75,7 @@ export function GuideEntryView({
     const trimmed = question.trim();
     if (!trimmed || busy) return;
     setError(null);
+    setFollowUpStatus("");
     try {
       await onFollowUp(trimmed);
       setQuestion("");
@@ -56,12 +85,16 @@ export function GuideEntryView({
   }
 
   return (
-    <article className="space-y-6 pb-6">
+    <article className="entry-resolved space-y-6 pb-6">
       <header className="space-y-2 border-b border-[color:var(--screen-muted)]/30 pb-4">
         <p className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--screen-muted)]">
           Guide entry
         </p>
-        <h1 className="text-2xl font-semibold uppercase tracking-[0.04em] leading-tight">
+        <h1
+          data-page-heading
+          tabIndex={-1}
+          className="text-2xl font-semibold uppercase leading-tight tracking-[0.04em]"
+        >
           {entry.title}
         </h1>
         {entry.kind === "identify" && typeof entry.confidence === "number" ? (
@@ -117,6 +150,8 @@ export function GuideEntryView({
       {entry.supplements?.map((supplement, index) => (
         <section
           key={`${supplement.heading}-${index}`}
+          ref={index === supplementCount - 1 ? latestSupplementRef : undefined}
+          tabIndex={index === supplementCount - 1 ? -1 : undefined}
           className="space-y-2 border-t border-[color:var(--screen-muted)]/30 pt-4"
         >
           <h2 className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
@@ -211,6 +246,9 @@ export function GuideEntryView({
             Amending entry…
           </p>
         ) : null}
+        <p role="status" aria-live="polite" className="sr-only">
+          {followUpStatus}
+        </p>
       </form>
     </article>
   );

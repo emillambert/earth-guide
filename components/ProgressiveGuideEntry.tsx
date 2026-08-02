@@ -29,6 +29,8 @@ export function ProgressiveGuideEntry({ pending }: { pending: PendingEntry }) {
         </div>
         <h1
           key={progress.title ?? pending.query}
+          data-page-heading
+          tabIndex={-1}
           className="terminal-enter text-2xl font-semibold uppercase leading-tight tracking-[0.04em]"
         >
           {progress.title ?? pending.query}

@@ -28,6 +28,11 @@ type StreamEntryInput = {
   entryId: string;
   query?: string;
   surprise?: boolean;
+  local?: {
+    latitude: number;
+    longitude: number;
+    placeName: string;
+  };
 };
 
 type StreamCallbacks = {

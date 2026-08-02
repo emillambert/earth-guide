@@ -2,14 +2,19 @@
 
 import { useSyncExternalStore } from "react";
 import { streamEntry } from "@/lib/apiClient";
+import { requestCoordinates, reverseGeocode } from "@/lib/location";
 import { cacheEntry } from "@/lib/storage";
 import type { GuideProgress } from "@/lib/progressiveJson";
 
-type EntryRequest = {
-  query?: string;
-  surprise?: boolean;
-  kind: "lookup" | "surprise";
-};
+type EntryRequest =
+  | {
+      query?: string;
+      surprise?: boolean;
+      kind: "lookup" | "surprise";
+    }
+  | {
+      kind: "local";
+    };
 
 export type PendingEntry = {
   id: string;
@@ -63,12 +68,38 @@ async function runGeneration(id: string) {
   if (!pending) return;
 
   try {
-    const entry = await streamEntry(
-      {
+    let streamInput:
+      | { entryId: string; query?: string; surprise?: boolean }
+      | {
+          entryId: string;
+          local: {
+            latitude: number;
+            longitude: number;
+            placeName: string;
+          };
+        };
+
+    if (pending.request.kind === "local") {
+      const coordinates = await requestCoordinates();
+      const placeName = await reverseGeocode(
+        coordinates.latitude,
+        coordinates.longitude,
+      );
+      updatePending(id, (current) => ({ ...current, query: placeName }));
+      streamInput = {
+        entryId: id,
+        local: { ...coordinates, placeName },
+      };
+    } else {
+      streamInput = {
         entryId: id,
         query: pending.request.query,
         surprise: pending.request.surprise,
-      },
+      };
+    }
+
+    const entry = await streamEntry(
+      streamInput,
       {
         onStarted(query) {
           updatePending(id, (current) =>
@@ -101,13 +132,24 @@ async function runGeneration(id: string) {
 export function beginEntryGeneration(request: {
   query?: string;
   surprise?: boolean;
+  local?: boolean;
 }): string {
   const id = crypto.randomUUID();
-  const kind = request.surprise ? "surprise" : "lookup";
+  const kind = request.local
+    ? "local"
+    : request.surprise
+      ? "surprise"
+      : "lookup";
   setPending(id, {
     id,
-    query: request.query?.trim() || (request.surprise ? "Surprise entry" : "Guide entry"),
-    request: { ...request, kind },
+    query:
+      request.query?.trim() ||
+      (request.local
+        ? "Finding your location"
+        : request.surprise
+          ? "Surprise entry"
+          : "Guide entry"),
+    request: request.local ? { kind: "local" } : { ...request, kind },
     progress: { paragraphs: [] },
     status: "generating",
   });

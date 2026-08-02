@@ -11,7 +11,7 @@ export function PageNav({ saved = false }: Props) {
   return (
     <nav
       aria-label="Page navigation"
-      className="mb-4 flex min-h-11 items-center justify-between border-b border-[color:var(--screen-muted)]/25"
+      className="sticky -top-4 z-20 -mx-4 mb-4 flex min-h-14 items-end justify-between border-b border-[color:var(--screen-muted)]/25 bg-[color:var(--screen)]/95 px-2 pt-3 backdrop-blur-sm sm:-mx-5 sm:px-3"
     >
       <Link href="/guide" className={linkClass}>
         ← Index

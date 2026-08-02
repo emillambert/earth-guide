@@ -213,6 +213,19 @@ button:disabled {
   animation: terminal-fade 320ms ease-out both;
 }
 
+@keyframes entry-resolve {
+  from {
+    opacity: 0.92;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.entry-resolved {
+  animation: entry-resolve 160ms ease-out both;
+}
+
 @keyframes pulse-line {
   0%,
   100% {
@@ -229,6 +242,7 @@ button:disabled {
 
 @media (prefers-reduced-motion: reduce) {
   .cover-exit,
+  .entry-resolved,
   .terminal-enter,
   .cursor-blink::after,
   .loading-pulse,
