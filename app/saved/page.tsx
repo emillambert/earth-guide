@@ -1,22 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { PlasticButton } from "@/components/PlasticButton";
 import { PageNav } from "@/components/PageNav";
+import { Notice } from "@/components/Notice";
 import {
   cacheEntry,
   clearGuideCopies,
   removeSavedEntry,
+  restoreSavedEntry,
 } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
+import type { SavedGuideEntry } from "@/types/guide";
 
 export default function SavedPage() {
   const router = useRouter();
   const state = useAppState();
   const [query, setQuery] = useState("");
+  const [removedEntry, setRemovedEntry] = useState<SavedGuideEntry | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  useEffect(() => {
+    if (!removedEntry) return;
+    const timer = window.setTimeout(() => setRemovedEntry(null), 7000);
+    return () => window.clearTimeout(timer);
+  }, [removedEntry]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -63,6 +74,22 @@ export default function SavedPage() {
             className="lookup-field min-h-12 w-full px-3 py-3 text-base"
           />
 
+          {removedEntry ? (
+            <Notice tone="muted" role="status" className="flex items-center justify-between gap-3">
+              <span>Removed “{removedEntry.title}”.</span>
+              <button
+                type="button"
+                className="inline-flex min-h-11 shrink-0 items-center text-xs uppercase tracking-[0.12em] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
+                onClick={() => {
+                  restoreSavedEntry(removedEntry);
+                  setRemovedEntry(null);
+                }}
+              >
+                Undo
+              </button>
+            </Notice>
+          ) : null}
+
           {filtered.length ? (
             <ul className="space-y-3">
               {filtered.map((entry) => (
@@ -94,7 +121,10 @@ export default function SavedPage() {
                   <button
                     type="button"
                     className="mt-2 inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--warning)] underline-offset-4 hover:underline"
-                    onClick={() => removeSavedEntry(entry.id)}
+                    onClick={() => {
+                      setRemovedEntry(entry);
+                      removeSavedEntry(entry.id);
+                    }}
                   >
                     Remove bookmark
                   </button>
@@ -119,22 +149,41 @@ export default function SavedPage() {
                   Clears saved entries and recent consultation history from this
                   device.
                 </p>
-                <PlasticButton
-                  fullWidth
-                  variant="warning"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Clear all saved entries and recent history on this device?",
-                      )
-                    ) {
-                      clearGuideCopies();
-                      setQuery("");
-                    }
-                  }}
-                >
-                  Clear device history
-                </PlasticButton>
+                {confirmClear ? (
+                  <Notice>
+                    <p>
+                      Clear every saved entry and recent consultation from this
+                      device? This cannot be undone.
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <PlasticButton
+                        variant="secondary"
+                        onClick={() => setConfirmClear(false)}
+                      >
+                        Keep copies
+                      </PlasticButton>
+                      <PlasticButton
+                        variant="warning"
+                        onClick={() => {
+                          clearGuideCopies();
+                          setQuery("");
+                          setRemovedEntry(null);
+                          setConfirmClear(false);
+                        }}
+                      >
+                        Clear all
+                      </PlasticButton>
+                    </div>
+                  </Notice>
+                ) : (
+                  <PlasticButton
+                    fullWidth
+                    variant="warning"
+                    onClick={() => setConfirmClear(true)}
+                  >
+                    Clear device history
+                  </PlasticButton>
+                )}
               </div>
             </details>
           )}

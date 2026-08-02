@@ -89,10 +89,35 @@ function EntryContent({ id }: { id: string }) {
 
   if (!entry) {
     return (
-      <div className="py-8">
+      <div className="terminal-enter space-y-5 py-8">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--screen-muted)]">
+            Entry unavailable
+          </p>
+          <h1
+            data-page-heading
+            tabIndex={-1}
+            className="text-xl font-semibold uppercase tracking-[0.04em]"
+          >
+            Local memory has moved on
+          </h1>
+        </div>
         <Notice tone="muted" role="status">
-          This entry is no longer held in local memory.
+          This entry is no longer held on this device. It may have been cleared
+          or belong to another installation of the Guide.
         </Notice>
+        <div className="grid gap-2">
+          <PlasticButton fullWidth onClick={() => router.push("/guide")}>
+            Return to index
+          </PlasticButton>
+          <PlasticButton
+            fullWidth
+            variant="secondary"
+            onClick={() => router.push("/saved")}
+          >
+            Open saved entries
+          </PlasticButton>
+        </div>
       </div>
     );
   }

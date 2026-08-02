@@ -4,6 +4,7 @@ import type { AppState, GuideEntry, SavedGuideEntry } from "@/types/guide";
 const STORAGE_KEY = "earth-guide-v7-style-reset";
 const MAX_RECENT = 20;
 export const STORAGE_EVENT = "earth-guide-storage";
+export const STORAGE_ERROR_EVENT = "earth-guide-storage-error";
 
 const DEFAULT_STATE: AppState = {
   recentEntries: [],
@@ -19,6 +20,7 @@ const SERVER_SNAPSHOT: AppState = DEFAULT_STATE;
 
 let cachedRaw: string | null | undefined = undefined;
 let cachedState: AppState = DEFAULT_STATE;
+let volatileState: AppState | null = null;
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
@@ -42,6 +44,7 @@ function buildState(partial: Partial<AppState> = {}): AppState {
 
 export function loadState(): AppState {
   if (!canUseStorage()) return SERVER_SNAPSHOT;
+  if (volatileState) return volatileState;
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -66,10 +69,24 @@ export function loadState(): AppState {
 export function saveState(state: AppState): void {
   if (!canUseStorage()) return;
   const raw = JSON.stringify(state);
-  localStorage.setItem(STORAGE_KEY, raw);
-  cachedRaw = raw;
-  cachedState = state;
-  notify();
+  try {
+    localStorage.setItem(STORAGE_KEY, raw);
+    volatileState = null;
+    cachedRaw = raw;
+    cachedState = state;
+    notify();
+  } catch {
+    volatileState = state;
+    cachedRaw = raw;
+    cachedState = state;
+    notify();
+    window.dispatchEvent(
+      new CustomEvent(STORAGE_ERROR_EVENT, {
+        detail:
+          "Device storage is full or unavailable. Changes will last for this session only.",
+      }),
+    );
+  }
 }
 
 export function updateState(updater: (prev: AppState) => AppState): AppState {
@@ -161,6 +178,20 @@ export function removeSavedEntry(id: string): AppState {
   return updateState((prev) => ({
     ...prev,
     savedEntries: prev.savedEntries.filter((entry) => entry.id !== id),
+  }));
+}
+
+export function restoreSavedEntry(entry: SavedGuideEntry): AppState {
+  return updateState((prev) => ({
+    ...prev,
+    savedEntries: [
+      entry,
+      ...prev.savedEntries.filter((item) => item.id !== entry.id),
+    ],
+    entryCache: {
+      ...prev.entryCache,
+      [entry.id]: entry,
+    },
   }));
 }
 

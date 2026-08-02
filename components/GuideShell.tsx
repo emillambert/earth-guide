@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { STORAGE_ERROR_EVENT } from "@/lib/storage";
 
 type Props = {
   children: ReactNode;
@@ -13,6 +14,21 @@ export function GuideShell({
   footer,
   edition = "Earth Edition 42.1",
 }: Props) {
+  const [storageError, setStorageError] = useState("");
+
+  useEffect(() => {
+    const handleStorageError = (event: Event) => {
+      setStorageError(
+        event instanceof CustomEvent && typeof event.detail === "string"
+          ? event.detail
+          : "Device storage is unavailable. Changes may not survive this session.",
+      );
+    };
+    window.addEventListener(STORAGE_ERROR_EVENT, handleStorageError);
+    return () =>
+      window.removeEventListener(STORAGE_ERROR_EVENT, handleStorageError);
+  }, []);
+
   return (
     <div
       className="min-h-dvh bg-[#121311] px-3 sm:px-4"
@@ -42,6 +58,21 @@ export function GuideShell({
             <div className="relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden">
               {children}
             </div>
+            {storageError ? (
+              <div
+                role="alert"
+                className="absolute inset-x-3 bottom-3 z-30 border border-[color:var(--warning)]/60 bg-[color:var(--screen)] px-3 py-3 text-sm leading-relaxed text-[color:var(--warning)] shadow-lg"
+              >
+                <p>{storageError}</p>
+                <button
+                  type="button"
+                  onClick={() => setStorageError("")}
+                  className="mt-2 inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
+                >
+                  Dismiss
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
 
