@@ -1,7 +1,14 @@
 import type { AppState, GuideEntry, SavedGuideEntry } from "@/types/guide";
 
 const STORAGE_KEY = "hitchhikers-guide-state-v1";
-const LEGACY_STORAGE_KEYS = ["earth-guide-v7-style-reset"];
+const LEGACY_STORAGE_KEYS = [
+  "earth-guide-v7-style-reset",
+  "earth-guide-v6-ui-reset",
+  "earth-guide-v5-single-pass",
+  "earth-guide-v4-rewrite",
+  "earth-guide-v3-adams",
+  "earth-guide-v1",
+];
 const MAX_RECENT = 20;
 export const STORAGE_EVENT = "earth-guide-storage";
 export const STORAGE_ERROR_EVENT = "earth-guide-storage-error";

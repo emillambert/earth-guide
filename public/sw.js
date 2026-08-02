@@ -46,6 +46,9 @@ async function cachePageAndAssets(cache, path, strictAssets = false) {
       try {
         const request = new Request(url, { cache: "reload" });
         const assetResponse = await fetch(request);
+        if (!assetResponse.ok || assetResponse.redirected) {
+          throw new Error(`Could not cache ${url}`);
+        }
         await cacheResponse(cache, request, assetResponse);
       } catch (error) {
         if (strictAssets) throw error;
@@ -161,35 +164,38 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
 
   if (STATIC_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
-    event.respondWith(
-      caches.match(request, { ignoreVary: true }).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            void caches
-              .open(CACHE_NAME)
-              .then((cache) => cacheResponse(cache, request, response))
-              .catch(() => {
-                // A cache write must not break a valid network response.
-              });
-            return response;
-          }),
-      ),
+    const responsePromise = caches
+      .match(request, { ignoreVary: true })
+      .then((cached) => cached || fetch(request));
+    event.waitUntil(
+      responsePromise
+        .then((response) =>
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cacheResponse(cache, request, response)),
+        )
+        .catch(() => {
+          // A cache write must not break a valid response.
+        }),
     );
+    event.respondWith(responsePromise);
     return;
   }
 
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        void caches
+  const networkResponse = fetch(request);
+  event.waitUntil(
+    networkResponse
+      .then((response) =>
+        caches
           .open(CACHE_NAME)
-          .then((cache) => cacheResponse(cache, request, response))
-          .catch(() => {
-            // A cache write must not break a valid network response.
-          });
-        return response;
-      })
+          .then((cache) => cacheResponse(cache, request, response)),
+      )
+      .catch(() => {
+        // A cache write must not break a valid network response.
+      }),
+  );
+  event.respondWith(
+    networkResponse
       .catch(async () => {
         const cached =
           (await caches.match(request)) ||

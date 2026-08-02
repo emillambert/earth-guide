@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { loadState } from "@/lib/storage";
 
 export function ServiceWorkerRegister() {
   const pathname = usePathname();
-  const warmedWorkers = useRef(new WeakSet<ServiceWorker>());
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
@@ -50,14 +49,11 @@ export function ServiceWorkerRegister() {
         urls: Array.from(new Set(resourceUrls)),
       });
 
-      if (!warmedWorkers.current.has(worker)) {
-        warmedWorkers.current.add(worker);
-        for (const entry of loadState().savedEntries) {
-          worker.postMessage({
-            type: "CACHE_ENTRY_ROUTE",
-            path: `/entry/${encodeURIComponent(entry.id)}`,
-          });
-        }
+      for (const entry of loadState().savedEntries) {
+        worker.postMessage({
+          type: "CACHE_ENTRY_ROUTE",
+          path: `/entry/${encodeURIComponent(entry.id)}`,
+        });
       }
     };
 

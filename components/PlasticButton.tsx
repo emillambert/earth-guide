@@ -1,6 +1,10 @@
 "use client";
 
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { pressFeedback } from "@/lib/feedback";
 import { loadState } from "@/lib/storage";
 
@@ -10,15 +14,19 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   fullWidth?: boolean;
 };
 
-export function PlasticButton({
-  children,
-  className = "",
-  variant = "primary",
-  fullWidth = false,
-  onClick,
-  type = "button",
-  ...rest
-}: Props) {
+export const PlasticButton = forwardRef<HTMLButtonElement, Props>(
+  function PlasticButton(
+    {
+      children,
+      className = "",
+      variant = "primary",
+      fullWidth = false,
+      onClick,
+      type = "button",
+      ...rest
+    },
+    ref,
+  ) {
   const variantClass =
     variant === "secondary"
       ? "plastic-button-secondary"
@@ -28,6 +36,7 @@ export function PlasticButton({
 
   return (
     <button
+      ref={ref}
       type={type}
       className={[
         variantClass,
@@ -47,4 +56,5 @@ export function PlasticButton({
       {children}
     </button>
   );
-}
+  },
+);

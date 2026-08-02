@@ -21,13 +21,30 @@ export default function SavedPage() {
   const [removedEntry, setRemovedEntry] = useState<SavedGuideEntry | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const undoRef = useRef<HTMLButtonElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const clearTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!removedEntry) return;
     undoRef.current?.focus();
-    const timer = window.setTimeout(() => setRemovedEntry(null), 7000);
+    const timer = window.setTimeout(() => {
+      if (document.activeElement !== undoRef.current) setRemovedEntry(null);
+    }, 7000);
     return () => window.clearTimeout(timer);
   }, [removedEntry]);
+
+  function focusArchiveHeading() {
+    window.requestAnimationFrame(() => {
+      headingRef.current?.focus({ preventScroll: true });
+    });
+  }
+
+  function closeClearConfirmation() {
+    setConfirmClear(false);
+    window.requestAnimationFrame(() => {
+      clearTriggerRef.current?.focus({ preventScroll: true });
+    });
+  }
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -56,6 +73,7 @@ export default function SavedPage() {
               Local archive
             </p>
             <h1
+              ref={headingRef}
               data-page-heading
               tabIndex={-1}
               className="text-2xl font-semibold uppercase tracking-[0.06em]"
@@ -88,6 +106,7 @@ export default function SavedPage() {
                 onClick={() => {
                   restoreSavedEntry(removedEntry);
                   setRemovedEntry(null);
+                  focusArchiveHeading();
                 }}
               >
                 Undo
@@ -164,7 +183,7 @@ export default function SavedPage() {
                       <PlasticButton
                         autoFocus
                         variant="secondary"
-                        onClick={() => setConfirmClear(false)}
+                        onClick={closeClearConfirmation}
                       >
                         Keep copies
                       </PlasticButton>
@@ -175,6 +194,7 @@ export default function SavedPage() {
                           setQuery("");
                           setRemovedEntry(null);
                           setConfirmClear(false);
+                          focusArchiveHeading();
                         }}
                       >
                         Clear all
@@ -183,6 +203,7 @@ export default function SavedPage() {
                   </Notice>
                 ) : (
                   <PlasticButton
+                    ref={clearTriggerRef}
                     fullWidth
                     variant="warning"
                     onClick={() => setConfirmClear(true)}
