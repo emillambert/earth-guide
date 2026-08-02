@@ -140,12 +140,15 @@ export default function EntryPage() {
   const id = params.id;
 
   return (
-    <GuideShell>
-      <GuideScreen resetKey={id}>
-        <PageNav saved />
+    <>
+      <title>Guide Entry | The Hitchhiker&apos;s Guide</title>
+      <GuideShell>
+        <GuideScreen resetKey={id}>
+          <PageNav saved />
 
-        {id ? <EntryContent key={id} id={id} /> : null}
-      </GuideScreen>
-    </GuideShell>
+          {id ? <EntryContent key={id} id={id} /> : null}
+        </GuideScreen>
+      </GuideShell>
+    </>
   );
 }
