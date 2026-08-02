@@ -106,7 +106,12 @@ export default function SavedPage() {
                     className="min-h-11 w-full text-left focus-visible:outline-2 focus-visible:outline-[color:var(--highlight)]"
                     onClick={() => {
                       cacheEntry(entry);
-                      router.push(`/entry/${entry.id}`);
+                      const path = `/entry/${entry.id}`;
+                      if (navigator.onLine) {
+                        router.push(path);
+                      } else {
+                        window.location.assign(path);
+                      }
                     }}
                   >
                     <p className="text-sm uppercase tracking-[0.05em]">

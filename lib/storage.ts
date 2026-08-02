@@ -31,6 +31,25 @@ function notify(): void {
   window.dispatchEvent(new Event(STORAGE_EVENT));
 }
 
+function prewarmEntryRoute(id: string): void {
+  if (
+    typeof navigator === "undefined" ||
+    !("serviceWorker" in navigator)
+  ) {
+    return;
+  }
+  void navigator.serviceWorker.ready
+    .then((registration) => {
+      registration.active?.postMessage({
+        type: "CACHE_ENTRY_ROUTE",
+        path: `/entry/${encodeURIComponent(id)}`,
+      });
+    })
+    .catch(() => {
+      // Offline route caching is best-effort.
+    });
+}
+
 function buildState(partial: Partial<AppState> = {}): AppState {
   return {
     hasOpenedGuide: partial.hasOpenedGuide ?? false,
@@ -154,7 +173,7 @@ export function getEntryById(id: string): GuideEntry | undefined {
 }
 
 export function saveEntry(entry: GuideEntry): AppState {
-  return updateState((prev) => {
+  const state = updateState((prev) => {
     const savedAt =
       prev.savedEntries.find((item) => item.id === entry.id)?.savedAt ??
       new Date().toISOString();
@@ -172,6 +191,8 @@ export function saveEntry(entry: GuideEntry): AppState {
       },
     };
   });
+  prewarmEntryRoute(entry.id);
+  return state;
 }
 
 export function removeSavedEntry(id: string): AppState {
@@ -182,7 +203,7 @@ export function removeSavedEntry(id: string): AppState {
 }
 
 export function restoreSavedEntry(entry: SavedGuideEntry): AppState {
-  return updateState((prev) => ({
+  const state = updateState((prev) => ({
     ...prev,
     savedEntries: [
       entry,
@@ -193,6 +214,8 @@ export function restoreSavedEntry(entry: SavedGuideEntry): AppState {
       [entry.id]: entry,
     },
   }));
+  prewarmEntryRoute(entry.id);
+  return state;
 }
 
 export function isEntrySaved(id: string): boolean {
