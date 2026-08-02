@@ -84,6 +84,10 @@ button:disabled {
   transform: translateY(0);
 }
 
+[data-page-heading]:focus {
+  outline: none;
+}
+
 .guide-shell {
   background:
     radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.04), transparent 28%),

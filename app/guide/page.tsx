@@ -61,7 +61,7 @@ export default function IndexPage() {
               <h2 className="text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)]">
                 Field tools
               </h2>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 min-[360px]:grid-cols-3">
               <PlasticButton
                 variant="secondary"
                 className="px-2 text-xs"
@@ -78,7 +78,7 @@ export default function IndexPage() {
               </PlasticButton>
               <PlasticButton
                 variant="secondary"
-                className="px-2 text-xs"
+                className="col-span-2 px-2 text-xs min-[360px]:col-span-1"
                 onClick={surprise}
               >
                 Surprise
