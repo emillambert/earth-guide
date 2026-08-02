@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
@@ -28,14 +28,6 @@ function EntryContent({ id }: { id: string }) {
   const [override, setOverride] = useState<GuideEntry | null>(null);
   const [followUpBusy, setFollowUpBusy] = useState(false);
   const entry = override && override.id === id ? override : stored ?? null;
-
-  useEffect(() => {
-    if (!entry?.title) return;
-    const frame = window.requestAnimationFrame(() => {
-      document.title = `${entry.title} | The Hitchhiker’s Guide`;
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [entry?.title]);
 
   function consultRelated(topic: string) {
     const nextId = beginEntryGeneration({ query: topic });
@@ -131,12 +123,15 @@ function EntryContent({ id }: { id: string }) {
   }
 
   return (
-    <GuideEntryView
-      entry={entry}
-      busy={followUpBusy}
-      onRelated={consultRelated}
-      onFollowUp={handleFollowUp}
-    />
+    <>
+      <title>{entry.title} | The Hitchhiker&apos;s Guide</title>
+      <GuideEntryView
+        entry={entry}
+        busy={followUpBusy}
+        onRelated={consultRelated}
+        onFollowUp={handleFollowUp}
+      />
+    </>
   );
 }
 
