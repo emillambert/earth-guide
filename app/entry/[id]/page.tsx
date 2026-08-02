@@ -31,7 +31,10 @@ function EntryContent({ id }: { id: string }) {
 
   useEffect(() => {
     if (!entry?.title) return;
-    document.title = `${entry.title} | The Hitchhiker’s Guide`;
+    const frame = window.requestAnimationFrame(() => {
+      document.title = `${entry.title} | The Hitchhiker’s Guide`;
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [entry?.title]);
 
   function consultRelated(topic: string) {
