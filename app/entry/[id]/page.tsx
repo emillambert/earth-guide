@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { GuideEntryView } from "@/components/GuideEntryView";
+import { DocumentTitle } from "@/components/DocumentTitle";
 import { ProgressiveGuideEntry } from "@/components/ProgressiveGuideEntry";
 import { PlasticButton } from "@/components/PlasticButton";
 import { Notice } from "@/components/Notice";
@@ -124,7 +125,7 @@ function EntryContent({ id }: { id: string }) {
 
   return (
     <>
-      <title>{entry.title} | The Hitchhiker&apos;s Guide</title>
+      <DocumentTitle title={entry.title} />
       <GuideEntryView
         entry={entry}
         busy={followUpBusy}
@@ -140,15 +141,12 @@ export default function EntryPage() {
   const id = params.id;
 
   return (
-    <>
-      <title>Guide Entry | The Hitchhiker&apos;s Guide</title>
-      <GuideShell>
-        <GuideScreen resetKey={id}>
-          <PageNav saved />
+    <GuideShell>
+      <GuideScreen resetKey={id}>
+        <PageNav saved />
 
-          {id ? <EntryContent key={id} id={id} /> : null}
-        </GuideScreen>
-      </GuideShell>
-    </>
+        {id ? <EntryContent key={id} id={id} /> : null}
+      </GuideScreen>
+    </GuideShell>
   );
 }
