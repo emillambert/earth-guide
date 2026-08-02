@@ -43,7 +43,11 @@ export default function IndexPage() {
               <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
                 Current supplement
               </p>
-              <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+              <h1
+                data-page-heading
+                tabIndex={-1}
+                className="text-2xl font-semibold uppercase tracking-[0.06em]"
+              >
                 Earth index
               </h1>
               <p className="text-sm leading-relaxed text-[color:var(--screen-muted)]">
@@ -91,7 +95,7 @@ export default function IndexPage() {
                 </h2>
                 <Link
                   href="/saved"
-                  className="inline-flex min-h-11 items-center px-2 text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center px-2 text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                 >
                   Saved →
                 </Link>
@@ -135,7 +139,7 @@ export default function IndexPage() {
                 </label>
                 <Link
                   href="/cover"
-                  className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                 >
                   View cover
                 </Link>

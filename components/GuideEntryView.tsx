@@ -108,7 +108,7 @@ export function GuideEntryView({
       </header>
 
       {entry.highRisk && !entry.caution ? (
-        <Notice>
+        <Notice role="status">
           This entry is general information, not emergency or professional
           guidance.
         </Notice>
@@ -172,7 +172,7 @@ export function GuideEntryView({
           type="button"
           aria-expanded={sourcesOpen}
           aria-controls="entry-sources"
-          className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 items-center text-xs uppercase tracking-[0.16em] text-[color:var(--screen-muted)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
           onClick={() => setSourcesOpen((open) => !open)}
         >
           Sources {sourcesOpen ? "▴" : "▾"}
@@ -229,6 +229,8 @@ export function GuideEntryView({
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           disabled={busy}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "follow-up-error" : undefined}
           rows={3}
           placeholder="Do they actually eat the leaves?"
           className="lookup-field w-full px-3 py-3 text-base text-[color:var(--screen-text)] placeholder:text-[color:var(--screen-muted)]"
@@ -241,7 +243,7 @@ export function GuideEntryView({
           Ask a follow-up
         </PlasticButton>
         {error ? (
-          <Notice>{error}</Notice>
+          <Notice id="follow-up-error">{error}</Notice>
         ) : null}
         {busy ? (
           <p className="loading-pulse text-xs uppercase tracking-[0.14em] text-[color:var(--screen-muted)]">

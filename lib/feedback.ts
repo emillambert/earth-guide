@@ -32,7 +32,11 @@ export function playClickSound(enabled: boolean): void {
 }
 
 export function hapticTick(): void {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+  if (
+    typeof navigator !== "undefined" &&
+    "vibrate" in navigator &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
     navigator.vibrate(12);
   }
 }

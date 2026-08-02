@@ -36,6 +36,7 @@ export function SearchPanel({
       <div className="relative">
         <input
           id="guide-query"
+          type="search"
           ref={inputRef}
           value={query}
           onChange={(event) => setQuery(event.target.value)}

@@ -24,9 +24,12 @@ export default function CoverPage() {
     if (exiting) return;
     setExiting(true);
     markGuideOpened();
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     window.setTimeout(() => {
       router.push("/guide");
-    }, 400);
+    }, reducedMotion ? 0 : 400);
   }
 
   return (
@@ -45,7 +48,11 @@ export default function CoverPage() {
           <p className="mb-6 text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
             Field cover
           </p>
-          <h1 className="text-4xl font-bold tracking-[0.12em] text-[color:var(--screen-text)] sm:text-5xl">
+          <h1
+            data-page-heading
+            tabIndex={-1}
+            className="text-4xl font-bold tracking-[0.12em] text-[color:var(--screen-text)] sm:text-5xl"
+          >
             DON&apos;T PANIC
           </h1>
           <div className="mb-10 mt-8 h-2 w-24 bg-[color:var(--highlight)]" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
@@ -28,6 +28,11 @@ function EntryContent({ id }: { id: string }) {
   const [override, setOverride] = useState<GuideEntry | null>(null);
   const [followUpBusy, setFollowUpBusy] = useState(false);
   const entry = override && override.id === id ? override : stored ?? null;
+
+  useEffect(() => {
+    if (!entry?.title) return;
+    document.title = `${entry.title} | The Hitchhiker’s Guide`;
+  }, [entry?.title]);
 
   function consultRelated(topic: string) {
     const nextId = beginEntryGeneration({ query: topic });

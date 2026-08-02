@@ -55,7 +55,11 @@ export default function SavedPage() {
             <p className="text-[10px] uppercase tracking-[0.22em] text-[color:var(--screen-muted)]">
               Local archive
             </p>
-            <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+            <h1
+              data-page-heading
+              tabIndex={-1}
+              className="text-2xl font-semibold uppercase tracking-[0.06em]"
+            >
               Saved entries
             </h1>
             <p className="text-sm text-[color:var(--screen-muted)]">
@@ -120,7 +124,7 @@ export default function SavedPage() {
                   </button>
                   <button
                     type="button"
-                    className="mt-2 inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--warning)] underline-offset-4 hover:underline"
+                    className="mt-2 inline-flex min-h-11 items-center text-xs uppercase tracking-[0.12em] text-[color:var(--warning)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                     onClick={() => {
                       setRemovedEntry(entry);
                       removeSavedEntry(entry.id);

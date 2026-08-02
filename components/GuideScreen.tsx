@@ -12,13 +12,12 @@ export function GuideScreen({ children, className = "", resetKey }: Props) {
   const screenRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (resetKey === undefined) return;
     const screen = screenRef.current;
     screen?.scrollTo({ top: 0 });
     const frame = window.requestAnimationFrame(() => {
-      screen
-        ?.querySelector<HTMLElement>("[data-page-heading]")
-        ?.focus({ preventScroll: true });
+      const focusTarget =
+        screen?.querySelector<HTMLElement>("[data-page-heading]") ?? screen;
+      focusTarget?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [resetKey]);

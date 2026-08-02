@@ -14,11 +14,21 @@ export function buildEntrySpeechText(entry: GuideEntry): string {
   }
   if (entry.caution) {
     parts.push("Caution.", entry.caution);
+  } else if (entry.highRisk) {
+    parts.push(
+      "Caution. This entry is general information, not emergency or professional guidance.",
+    );
+  }
+  if (entry.editorialNote) {
+    parts.push("Editorial note.", entry.editorialNote);
   }
   if (entry.supplements?.length) {
     for (const supplement of entry.supplements) {
       parts.push(supplement.heading, ...supplement.body);
     }
+  }
+  if (entry.sources.length) {
+    parts.push("Sources.", ...entry.sources.map((source) => source.title));
   }
 
   return parts.filter(Boolean).join(" ");

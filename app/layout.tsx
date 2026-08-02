@@ -10,7 +10,10 @@ const guideMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Hitchhiker’s Guide to the Galaxy",
+  title: {
+    default: "The Hitchhiker’s Guide to the Galaxy",
+    template: "%s | The Hitchhiker’s Guide",
+  },
   description:
     "The Hitchhiker’s Guide to the Galaxy — practical Earth edition. Look anything up. Don’t panic.",
   applicationName: "The Hitchhiker’s Guide to the Galaxy",
@@ -63,6 +66,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${guideMono.variable} h-full`}>
       <body className="min-h-full font-mono antialiased">
+        <a href="#main-content" className="skip-link">
+          Skip to Guide content
+        </a>
         {children}
         <ServiceWorkerRegister />
       </body>
