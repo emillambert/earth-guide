@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GuideShell } from "@/components/GuideShell";
 import { GuideScreen } from "@/components/GuideScreen";
 import { PlasticButton } from "@/components/PlasticButton";
@@ -17,14 +16,15 @@ import { useAppState } from "@/lib/useAppState";
 import type { SavedGuideEntry } from "@/types/guide";
 
 export default function SavedPage() {
-  const router = useRouter();
   const state = useAppState();
   const [query, setQuery] = useState("");
   const [removedEntry, setRemovedEntry] = useState<SavedGuideEntry | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const undoRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!removedEntry) return;
+    undoRef.current?.focus();
     const timer = window.setTimeout(() => setRemovedEntry(null), 7000);
     return () => window.clearTimeout(timer);
   }, [removedEntry]);
@@ -82,6 +82,7 @@ export default function SavedPage() {
             <Notice tone="muted" role="status" className="flex items-center justify-between gap-3">
               <span>Removed “{removedEntry.title}”.</span>
               <button
+                ref={undoRef}
                 type="button"
                 className="inline-flex min-h-11 shrink-0 items-center text-xs uppercase tracking-[0.12em] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--highlight)]"
                 onClick={() => {
@@ -106,12 +107,7 @@ export default function SavedPage() {
                     className="min-h-11 w-full text-left focus-visible:outline-2 focus-visible:outline-[color:var(--highlight)]"
                     onClick={() => {
                       cacheEntry(entry);
-                      const path = `/entry/${entry.id}`;
-                      if (navigator.onLine) {
-                        router.push(path);
-                      } else {
-                        window.location.assign(path);
-                      }
+                      window.location.assign(`/entry/${entry.id}`);
                     }}
                   >
                     <p className="text-sm uppercase tracking-[0.05em]">
@@ -166,6 +162,7 @@ export default function SavedPage() {
                     </p>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <PlasticButton
+                        autoFocus
                         variant="secondary"
                         onClick={() => setConfirmClear(false)}
                       >

@@ -1,7 +1,7 @@
 import type { AppState, GuideEntry, SavedGuideEntry } from "@/types/guide";
 
-// Bump this to wipe local saved/recent caches after major voice changes.
-const STORAGE_KEY = "earth-guide-v7-style-reset";
+const STORAGE_KEY = "hitchhikers-guide-state-v1";
+const LEGACY_STORAGE_KEYS = ["earth-guide-v7-style-reset"];
 const MAX_RECENT = 20;
 export const STORAGE_EVENT = "earth-guide-storage";
 export const STORAGE_ERROR_EVENT = "earth-guide-storage-error";
@@ -66,7 +66,20 @@ export function loadState(): AppState {
   if (volatileState) return volatileState;
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      for (const key of LEGACY_STORAGE_KEYS) {
+        raw = localStorage.getItem(key);
+        if (raw) {
+          try {
+            localStorage.setItem(STORAGE_KEY, raw);
+          } catch {
+            // The legacy copy can still be used for this session.
+          }
+          break;
+        }
+      }
+    }
     if (raw === cachedRaw) return cachedState;
 
     cachedRaw = raw;
