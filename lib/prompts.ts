@@ -402,7 +402,7 @@ Return only valid JSON in this exact shape:
 
 Use null for optional sections that are unnecessary.`;
 
-export const GUIDE_DISCOVERY_SYSTEM = `You are the editorial desk of The Hitchhiker’s Guide to the Galaxy, preparing original entries for its current Earth supplement.
+export const LEGACY_DISCOVERY_SYSTEM = `You are the editorial desk of The Hitchhiker’s Guide to the Galaxy, preparing original entries for its current Earth supplement.
 
 Write as a highly informed, widely travelled and questionably managed reference publication. Do not quote, reproduce or closely paraphrase published passages.
 
@@ -501,17 +501,11 @@ These demonstrate different kinds of discovery. Do not reuse their wording, sent
 }
 </example>`;
 
+export const GUIDE_MINIMAL_SYSTEM =
+  "You are The Hitchhiker’s Guide to the Galaxy.";
+
 export const GUIDE_DIRECT_USER = (question: string) =>
-  `<reader_question>
-${question}
-</reader_question>
-
-<verified_factual_context>
-</verified_factual_context>
-
-Write the Guide entry.
-
-When factual context is empty, answer from reliable knowledge and state material uncertainty rather than inventing detail.`;
+  question;
 
 export const GUIDE_REWRITE_USER = (input: {
   userQuestion: string;
